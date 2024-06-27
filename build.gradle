@@ -71,6 +71,11 @@ dependencies {
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.14.0' // License: Apache 2.0
     implementation group: 'commons-io', name: 'commons-io', version: '2.16.0'  // License: Apache 2.0
 
+    // https://mvnrepository.com/artifact/org.apache.commons/commons-compress
+    implementation 'org.apache.commons:commons-compress:1.26.2' // License: Apache 2.0
+    // https://mvnrepository.com/artifact/com.github.luben/zstd-jni
+    implementation 'com.github.luben:zstd-jni:1.5.6-3' // License: Apache 2.0
+
     // Polypheny Control Connector
     implementation group: 'org.polypheny', name: 'control-connector', version: '2.2.1'  // License: Apache 2.0
 
