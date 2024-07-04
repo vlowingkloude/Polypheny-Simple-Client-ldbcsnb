@@ -36,7 +36,8 @@ public class Comment extends EntityHandler {
 
     @Override
     public String getQuery(List<String> row) {
-        String baseQuery = "CREATE (message_%s:Comment {creationDate: \"%s\", id: %s, locationIP: \"%s\", browserUsed: \"%s\", content: \"%s\", length: %s})";
+        // TODO: shall we use message_id here? OR use Comment_id?
+        String baseQuery = "CREATE (comment_%s:Message:Comment {creationDate: \"%s\", id: %s, locationIP: \"%s\", browserUsed: \"%s\", content: \"%s\", length: %s})";
         return String.format(baseQuery, row.get(1), row.get(0), row.get(1), row.get(2), row.get(3), row.get(4), row.get(5));
     }
 }

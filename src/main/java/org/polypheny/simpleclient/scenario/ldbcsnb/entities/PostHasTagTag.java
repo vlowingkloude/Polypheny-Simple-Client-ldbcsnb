@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-6/24/24, 4:17 PM The Polypheny Project
+ * Copyright (c) 2019-7/4/24, 5:31 PM The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -28,15 +28,15 @@ import org.polypheny.simpleclient.scenario.ldbcsnb.EntityHandler;
 
 import java.util.List;
 
-public class Post extends EntityHandler {
+public class PostHasTagTag extends EntityHandler {
     @Override
     public String getPath(String pathPrefix) {
-        return pathPrefix + "/bi-sf1-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/dynamic/Post/";
+        return pathPrefix + "/bi-sf1-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/dynamic/Comment_hasTag_Tag/";
     }
 
     @Override
     public String getQuery(List<String> row) {
-        String baseQuery = "CREATE (post_%s:Message:Post {creationDate: \"%s\", id: %s, imageFile: \"%s\", locationIP: \"%s\", browserUsed: \"%s\", language: \"%s\", content: \"%s\", length: %s})";
-        return String.format(baseQuery, row.get(1), row.get(0), row.get(1), row.get(2), row.get(3), row.get(4), row.get(5), row.get(6), row.get(7));
+        String baseQuery = "MATCH (post_%s:Post {id: %s}), (tag_%s:Tag {id: %s}) CREATE (post_%s)-[:HAS_TAG {creationDate: \"%s\"}]->(tag_%s)";
+        return String.format(baseQuery, row.get(1), row.get(1), row.get(2), row.get(2), row.get(1), row.get(0), row.get(2));
     }
 }
