@@ -36,6 +36,7 @@ import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
+import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
 import org.polypheny.simpleclient.scenario.Scenario;
 import org.polypheny.simpleclient.scenario.graph.GraphInsert;
@@ -47,6 +48,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 import java.util.zip.GZIPInputStream;
 
 public class LdbcSnbBench extends Scenario {
@@ -143,5 +145,25 @@ public class LdbcSnbBench extends Scenario {
             }
         }
 
+    }
+
+    @Override
+    public long execute(ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads) {
+        return 1;
+    }
+
+    @Override
+    public void warmUp(ProgressReporter progressReporter) {
+
+    }
+
+    @Override
+    public void analyze(Properties properties, File outputDirectory) {
+
+    }
+
+    @Override
+    public int getNumberOfInsertThreads() {
+        return 1;
     }
 }

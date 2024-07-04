@@ -36,7 +36,7 @@ public class TagClass extends EntityHandler {
 
     @Override
     public String getQuery(List<String> row) {
-        String baseQuery = "CREATE (id_%s:TagClass {id: \"%s\", name: \"%s\", url: \"%s\"})";
+        String baseQuery = "CREATE (tagclass_%s:TagClass {id: %s, name: \"%s\", url: \"%s\"})";
         return String.format(baseQuery, row.get(0), row.get(0), row.get(1), row.get(2));
     }
 }

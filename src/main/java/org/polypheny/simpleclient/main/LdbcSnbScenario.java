@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-6/24/24, 3:22 PM The Polypheny Project
+ * Copyright (c) 2019-7/4/24, 10:20 AM The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -22,22 +22,21 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.scenario.ldbcsnb.entities;
+package org.polypheny.simpleclient.main;
 
-import org.polypheny.simpleclient.scenario.ldbcsnb.EntityHandler;
+import org.polypheny.simpleclient.executor.Executor;
+import org.polypheny.simpleclient.scenario.ldbcsnb.LdbcSnbBench;
 
-import java.util.List;
-
-public class Organisation extends EntityHandler {
-
-    @Override
-    public String getPath(String pathPrefix) {
-        return pathPrefix + "/bi-sf1-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/static/Organisation/";
+public class LdbcSnbScenario {
+    public static void schema(Executor.ExecutorFactory executorFactory, boolean commitAfterEveryQuery ) {
+        LdbcSnbBench ldbcSnbBench = new LdbcSnbBench(executorFactory, commitAfterEveryQuery, false, 1);
+        ldbcSnbBench.createSchema(null, true);
     }
 
-    @Override
-    public String getQuery(List<String> row) {
-        String baseQuery = "CREATE (organisation_%s:Organisation:%s {id: %s, name: \"%s\", url: \"%s\"})";
-        return String.format(baseQuery, row.get(0), row.get(1), row.get(0), row.get(2), row.get(3));
+
+    public static void data(Executor.ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery ) {
+        LdbcSnbBench ldbcSnbBench = new LdbcSnbBench(executorFactory, commitAfterEveryQuery, false, 1);
+        ProgressReporter progressReporter = new ProgressBar( 1, 100 );
+        ldbcSnbBench.generateData( null, progressReporter );
     }
 }

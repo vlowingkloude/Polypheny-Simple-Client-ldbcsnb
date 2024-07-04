@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-6/24/24, 3:22 PM The Polypheny Project
+ * Copyright (c) 2019-7/3/24, 3:07 PM The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -28,16 +28,15 @@ import org.polypheny.simpleclient.scenario.ldbcsnb.EntityHandler;
 
 import java.util.List;
 
-public class Organisation extends EntityHandler {
-
+public class TagClassIsSubclassOfTagClass extends EntityHandler {
     @Override
     public String getPath(String pathPrefix) {
-        return pathPrefix + "/bi-sf1-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/static/Organisation/";
+        return pathPrefix + "/bi-sf1-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/static/TagClass_isSubclassOf_TagClass/";
     }
 
     @Override
     public String getQuery(List<String> row) {
-        String baseQuery = "CREATE (organisation_%s:Organisation:%s {id: %s, name: \"%s\", url: \"%s\"})";
-        return String.format(baseQuery, row.get(0), row.get(1), row.get(0), row.get(2), row.get(3));
+        String baseQuery = "MATCH (tagclass_%s:TagClass {id: %s}), (tagclass_%s:TagClass {id: %s}) CREATE (tagclass_%s)-[:IS_SUBCLASS_OF]->(tagclass_%s)";
+        return String.format(baseQuery, row.get(0), row.get(0), row.get(1), row.get(1), row.get(0), row.get(1));
     }
 }

@@ -36,7 +36,7 @@ public class Forum extends EntityHandler {
 
     @Override
     public String getQuery(List<String> row) {
-        String baseQuery = "CREATE (id_%s:Forum {creationDate: \"%s\", id: \"%s\", title: \"%s\"})";
+        String baseQuery = "CREATE (forum_%s:Forum {creationDate: \"%s\", id: %s, title: \"%s\"})";
         return String.format(baseQuery, row.get(1), row.get(0), row.get(1), row.get(2));
     }
 }

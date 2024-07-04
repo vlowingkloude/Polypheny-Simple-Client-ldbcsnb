@@ -36,7 +36,7 @@ public class Post extends EntityHandler {
 
     @Override
     public String getQuery(List<String> row) {
-        String baseQuery = "CREATE (id_%s:Post {creationDate: \"%s\", id: \"%s\", imageFile: \"%s\", locationIP: \"%s\", browserUsed: \"%s\", language: \"%s\", content: \"%s\", length: \"%s\"})";
+        String baseQuery = "CREATE (message_%s:Post {creationDate: \"%s\", id: %s, imageFile: \"%s\", locationIP: \"%s\", browserUsed: \"%s\", language: \"%s\", content: \"%s\", length: %s})";
         return String.format(baseQuery, row.get(1), row.get(0), row.get(1), row.get(2), row.get(3), row.get(4), row.get(5), row.get(6), row.get(7));
     }
 }

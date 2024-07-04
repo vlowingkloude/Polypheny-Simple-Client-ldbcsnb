@@ -44,6 +44,7 @@ public abstract class EntityHandler {
                 new Comment(),
                 new Post(),
                 new PlaceIsPartOfPlace(),
+                new TagClassIsSubclassOfTagClass(),
         };
     }
 }
