@@ -35,10 +35,12 @@ import org.apache.commons.io.IOUtils;
 import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.ExecutorException;
+import org.polypheny.simpleclient.executor.PolyphenyDbCypherExecutor;
 import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
 import org.polypheny.simpleclient.scenario.Scenario;
+import org.polypheny.simpleclient.scenario.graph.GraphBenchConfig;
 import org.polypheny.simpleclient.scenario.graph.GraphInsert;
 
 import java.io.*;
@@ -58,10 +60,12 @@ public class LdbcSnbBench extends Scenario {
 
     private final int scaleFactor;
     private final Path workDir;
+    private final GraphBenchConfig config;
 
-    public LdbcSnbBench(Executor.ExecutorFactory executorFactory,  boolean commitAfterEveryQuery, boolean dumpQueryList, int scaleFactor ) {
+    public LdbcSnbBench(Executor.ExecutorFactory executorFactory,  boolean commitAfterEveryQuery, boolean dumpQueryList, int scaleFactor, GraphBenchConfig config ) {
         super( executorFactory, commitAfterEveryQuery, dumpQueryList, QueryMode.TABLE );
         this.scaleFactor = scaleFactor;
+        this.config = config;
         String tempDirPrefix = "polypheny-ldbcsnb";
         try {
             workDir = Files.createTempDirectory(tempDirPrefix);
@@ -76,6 +80,8 @@ public class LdbcSnbBench extends Scenario {
         Executor executor = null;
         try {
             executor = executorFactory.createExecutorInstance( null, GRAPH_NAMESPACE);
+            ((PolyphenyDbCypherExecutor)executor).dropStore("hsqldb");
+            ((PolyphenyDbCypherExecutor)executor).deployNeo4j();
             executor.executeQuery( new CreateGraphDatabase().getNewQuery() );
         } catch (Exception e) {
             throw new RuntimeException( "LDBC SNB benchmark: failed to create schema", e );

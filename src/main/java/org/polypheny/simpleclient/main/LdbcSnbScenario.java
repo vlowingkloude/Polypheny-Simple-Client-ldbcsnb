@@ -24,19 +24,38 @@
 
 package org.polypheny.simpleclient.main;
 
+import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.executor.Executor;
+import org.polypheny.simpleclient.scenario.graph.GraphBenchConfig;
 import org.polypheny.simpleclient.scenario.ldbcsnb.LdbcSnbBench;
 
+import java.io.IOException;
+import java.util.Objects;
+import java.util.Properties;
+
+@Slf4j
 public class LdbcSnbScenario {
     public static void schema(Executor.ExecutorFactory executorFactory, boolean commitAfterEveryQuery ) {
-        LdbcSnbBench ldbcSnbBench = new LdbcSnbBench(executorFactory, commitAfterEveryQuery, false, 1);
+        GraphBenchConfig config = new GraphBenchConfig( getProperties(), 1 );
+        LdbcSnbBench ldbcSnbBench = new LdbcSnbBench(executorFactory, commitAfterEveryQuery, false, 1, config);
         ldbcSnbBench.createSchema(null, true);
     }
 
 
     public static void data(Executor.ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery ) {
-        LdbcSnbBench ldbcSnbBench = new LdbcSnbBench(executorFactory, commitAfterEveryQuery, false, 1);
+        GraphBenchConfig config = new GraphBenchConfig( getProperties(), multiplier );
+        LdbcSnbBench ldbcSnbBench = new LdbcSnbBench(executorFactory, commitAfterEveryQuery, false, 1, config);
         ProgressReporter progressReporter = new ProgressBar( 1, 100 );
         ldbcSnbBench.generateData( null, progressReporter );
+    }
+
+    private static Properties getProperties() {
+        Properties props = new Properties();
+        try {
+            props.load( Objects.requireNonNull( ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/graph/graph.properties" ) ) );
+        } catch ( IOException e ) {
+            log.error( "Exception while reading properties file", e );
+        }
+        return props;
     }
 }

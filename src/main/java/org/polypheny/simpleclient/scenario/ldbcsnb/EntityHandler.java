@@ -63,7 +63,7 @@ public abstract class EntityHandler {
                 new PostHasCreatorPerson(),
                 new CommentHasTagTag(),
                 new PostHasTagTag(),
-                new PostIsLocatedInCountry(),,
+                new PostIsLocatedInCountry(),
                 new PersonStudyAtUniversity(),
                 new PersonWorkAtCompany(),
         };

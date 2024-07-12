@@ -24,6 +24,7 @@
 
 package org.polypheny.simpleclient.scenario.ldbcsnb;
 
+import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.scenario.graph.GraphInsert;
@@ -34,7 +35,17 @@ public class CreateGraphDatabase extends QueryBuilder {
 
     @Override
     public Query getNewQuery() {
-        return new GraphInsert( String.format("CREATE DATABASE %s IF NOT EXISTS", LdbcSnbBench.GRAPH_NAMESPACE) );
+        String onStore = null;
+        for ( String storeName : PolyphenyDbExecutor.storeNames ) {
+            if ( storeName.toLowerCase().startsWith( "neo4j" ) ) {
+                onStore = storeName;
+                break;
+            }
+        }
+        if ( onStore == null ) {
+            onStore = "neo4j0";
+        }
+        return new GraphInsert( String.format("CREATE DATABASE %s IF NOT EXISTS ON STORE %s", LdbcSnbBench.GRAPH_NAMESPACE, onStore) );
     }
 
 }

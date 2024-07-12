@@ -33,9 +33,14 @@ import java.sql.SQLException;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
+import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.executor.PolyphenyDbCypherExecutor.PolyphenyDbCypherExecutorFactory;
+import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
+import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor;
+import org.polypheny.simpleclient.executor.PolyphenyVersionSwitch;
 import org.polypheny.simpleclient.main.GraphBenchScenario;
 import org.polypheny.simpleclient.main.LdbcSnbScenario;
+import org.polypheny.simpleclient.scenario.graph.GraphBenchConfig;
 
 
 @Slf4j
