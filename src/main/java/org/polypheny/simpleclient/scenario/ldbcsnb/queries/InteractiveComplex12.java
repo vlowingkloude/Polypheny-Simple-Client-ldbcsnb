@@ -26,6 +26,7 @@ package org.polypheny.simpleclient.scenario.ldbcsnb.queries;
 
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
+import org.polypheny.simpleclient.scenario.graph.GraphQuery;
 
 public class InteractiveComplex12 extends QueryBuilder {
     int id;
@@ -56,5 +57,10 @@ public class InteractiveComplex12 extends QueryBuilder {
     @Override
     public Query getNewQuery() {
         return null;
+    }
+
+    // used for warmup
+    public Query getDefaultQuery() {
+        return new GraphQuery( cypher.replace("$personId",  "10995116278009").replace("$tagClassName", "'Monarch'") );
     }
 }

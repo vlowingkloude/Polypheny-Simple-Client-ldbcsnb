@@ -155,6 +155,7 @@ public class LdbcSnbBench extends Scenario {
 
     @Override
     public long execute(ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads) {
+
         return 1;
     }
 

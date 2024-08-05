@@ -26,6 +26,7 @@ package org.polypheny.simpleclient.scenario.ldbcsnb.queries;
 
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
+import org.polypheny.simpleclient.scenario.graph.GraphQuery;
 
 public class InteractiveComplex4 extends QueryBuilder {
     int id = 0;
@@ -58,5 +59,10 @@ public class InteractiveComplex4 extends QueryBuilder {
     @Override
     public Query getNewQuery() {
         return null;
+    }
+
+    // used for warmup
+    public Query getDefaultQuery() {
+        return new GraphQuery( cypher.replace("$personId",  "4398046511333").replace("$startDate", "1275350400000").replace("$endDate", "1277856000000") );
     }
 }
