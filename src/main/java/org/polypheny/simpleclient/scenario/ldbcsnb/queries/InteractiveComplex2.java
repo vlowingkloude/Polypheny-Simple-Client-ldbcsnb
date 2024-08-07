@@ -27,29 +27,14 @@ package org.polypheny.simpleclient.scenario.ldbcsnb.queries;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.scenario.graph.GraphQuery;
+import org.polypheny.simpleclient.scenario.ldbcsnb.LdbcSnbBench;
+import org.polypheny.simpleclient.scenario.ldbcsnb.LdbcSnbQuery;
 
-public class InteractiveComplex2 extends QueryBuilder {
-    int id;
-    final String cypher = """
-            // Q2. Recent messages by your friends
-            /*
-            :params { personId: 10995116278009, maxDate: 1287230400000 }
-            */
-            MATCH (:Person {id: $personId })-[:KNOWS]-(friend:Person)<-[:HAS_CREATOR]-(message:Message)
-                WHERE message.creationDate < $maxDate
-                RETURN
-                    friend.id AS personId,
-                    friend.firstName AS personFirstName,
-                    friend.lastName AS personLastName,
-                    message.id AS postOrCommentId,
-                    coalesce(message.content,message.imageFile) AS postOrCommentContent,
-                    message.creationDate AS postOrCommentCreationDate
-                ORDER BY
-                    postOrCommentCreationDate DESC,
-                    toInteger(postOrCommentId) ASC
-                LIMIT 20""";
+public class InteractiveComplex2 extends LdbcSnbQuery {
+    static final String cypherFile = "interactive-complex-2.cypher";
+
     public InteractiveComplex2() {
-        this.id = 0;
+        super(cypherFile);
     }
 
     @Override

@@ -27,25 +27,13 @@ package org.polypheny.simpleclient.scenario.ldbcsnb.queries;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.scenario.graph.GraphQuery;
+import org.polypheny.simpleclient.scenario.ldbcsnb.LdbcSnbQuery;
 
-public class InteractiveComplex13 extends QueryBuilder {
-    int id;
-    final String cypher = """
-            // Q13. Single shortest path
-            /*
-            :params { person1Id: 8796093022390, person2Id: 8796093022357 }
-            */
-            MATCH
-                (person1:Person {id: $person1Id}),
-                (person2:Person {id: $person2Id}),
-                path = shortestPath((person1)-[:KNOWS*]-(person2))
-            RETURN
-                CASE path IS NULL
-                    WHEN true THEN -1
-                    ELSE length(path)
-                END AS shortestPathLength""";
+public class InteractiveComplex13 extends LdbcSnbQuery {
+    static final String cypherFile = "interactive-complex-13.cypher";
+
     public InteractiveComplex13() {
-        this.id = 0;
+        super(cypherFile);
     }
 
     @Override

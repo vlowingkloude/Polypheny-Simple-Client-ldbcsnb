@@ -27,39 +27,13 @@ package org.polypheny.simpleclient.scenario.ldbcsnb.queries;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.scenario.graph.GraphQuery;
+import org.polypheny.simpleclient.scenario.ldbcsnb.LdbcSnbQuery;
 
-public class InteractiveComplex5 extends QueryBuilder {
-    int id = 0;
-    final String cypher = """
-            // Q5. New groups
-            /*
-            :params { personId: 6597069766734, minDate: 1288612800000 }
-            */
-            MATCH (person:Person { id: $personId })-[:KNOWS*1..2]-(otherPerson)
-            WHERE
-                person <> otherPerson
-            WITH DISTINCT otherPerson
-            MATCH (otherPerson)<-[membership:HAS_MEMBER]-(forum)
-            WHERE
-                membership.creationDate > $minDate
-            WITH
-                forum,
-                collect(otherPerson) AS otherPersons
-            OPTIONAL MATCH (otherPerson2)<-[:HAS_CREATOR]-(post)<-[:CONTAINER_OF]-(forum)
-            WHERE
-                otherPerson2 IN otherPersons
-            WITH
-                forum,
-                count(post) AS postCount
-            RETURN
-                forum.title AS forumName,
-                postCount
-            ORDER BY
-                postCount DESC,
-                forum.id ASC
-            LIMIT 20""";
+public class InteractiveComplex5 extends LdbcSnbQuery {
+    static final String cypherFile = "interactive-complex-5.cypher";
+
     public InteractiveComplex5() {
-        this.id = 0;
+        super(cypherFile);
     }
 
     @Override

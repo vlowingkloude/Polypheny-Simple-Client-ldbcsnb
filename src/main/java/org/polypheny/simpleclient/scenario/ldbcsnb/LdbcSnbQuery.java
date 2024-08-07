@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-8/3/24, 4:30 PM The Polypheny Project
+ * Copyright (c) 2019-8/7/24, 4:05 PM The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -22,27 +22,26 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.scenario.ldbcsnb.queries;
+package org.polypheny.simpleclient.scenario.ldbcsnb;
 
-import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
-import org.polypheny.simpleclient.scenario.graph.GraphQuery;
-import org.polypheny.simpleclient.scenario.ldbcsnb.LdbcSnbQuery;
 
-public class InteractiveComplex1 extends LdbcSnbQuery {
-    // read the next query par
-    static final String cypherFile = "interactive-complex-1.cypher";
+import java.io.InputStream;
+import java.util.Scanner;
+import org.polypheny.simpleclient.query.Query;
 
-    public InteractiveComplex1() {
-        super(cypherFile);
-    }
-    @Override
-    public Query getNewQuery() {
-        return null;
+public abstract class LdbcSnbQuery extends QueryBuilder {
+    // used to locate the next parameters
+    protected int id = -1;
+    protected final String cypher;
+
+    public LdbcSnbQuery(String cypherFile) {
+        InputStream is = ClassLoader.getSystemResourceAsStream("org/polypheny/simpleclient/scenario/ldbcsnb/" + cypherFile);
+        assert is != null;
+        Scanner scanner = new Scanner(is).useDelimiter("\\A");
+        this.cypher = scanner.hasNext() ? scanner.next() : "";
     }
 
     // used for warmup
-    public Query getDefaultQuery() {
-        return new GraphQuery( cypher.replace("$personId",  "4398046511333").replace("$firstName", "'Jose'") );
-    }
+    public abstract Query getDefaultQuery();
 }

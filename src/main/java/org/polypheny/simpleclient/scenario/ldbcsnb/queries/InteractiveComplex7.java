@@ -27,33 +27,14 @@ package org.polypheny.simpleclient.scenario.ldbcsnb.queries;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.scenario.graph.GraphQuery;
+import org.polypheny.simpleclient.scenario.ldbcsnb.LdbcSnbBench;
+import org.polypheny.simpleclient.scenario.ldbcsnb.LdbcSnbQuery;
 
-public class InteractiveComplex7 extends QueryBuilder {
-    int id = 0;
-    final String cypher = """
-            // Q7. Recent likers
-            /*
-            :params { personId: 4398046511268 }
-            */
-            MATCH (person:Person {id: $personId})<-[:HAS_CREATOR]-(message:Message)<-[like:LIKES]-(liker:Person)
-                WITH liker, message, like.creationDate AS likeTime, person
-                ORDER BY likeTime DESC, toInteger(message.id) ASC
-                WITH liker, head(collect({msg: message, likeTime: likeTime})) AS latestLike, person
-            RETURN
-                liker.id AS personId,
-                liker.firstName AS personFirstName,
-                liker.lastName AS personLastName,
-                latestLike.likeTime AS likeCreationDate,
-                latestLike.msg.id AS commentOrPostId,
-                coalesce(latestLike.msg.content, latestLike.msg.imageFile) AS commentOrPostContent,
-                toInteger(floor(toFloat(latestLike.likeTime - latestLike.msg.creationDate)/1000.0)/60.0) AS minutesLatency,
-                not((liker)-[:KNOWS]-(person)) AS isNew
-            ORDER BY
-                likeCreationDate DESC,
-                toInteger(personId) ASC
-            LIMIT 20""";
+public class InteractiveComplex7 extends LdbcSnbQuery {
+    static final String cypherFile = "interactive-complex-7.cypher";
+
     public InteractiveComplex7() {
-        this.id = 0;
+        super(cypherFile);
     }
 
     @Override

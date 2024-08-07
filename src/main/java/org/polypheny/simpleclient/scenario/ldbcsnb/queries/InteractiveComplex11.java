@@ -27,36 +27,13 @@ package org.polypheny.simpleclient.scenario.ldbcsnb.queries;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.scenario.graph.GraphQuery;
+import org.polypheny.simpleclient.scenario.ldbcsnb.LdbcSnbQuery;
 
-public class InteractiveComplex11 extends QueryBuilder {
-    int id;
-    final String cypher = """
-            // Q11. Job referral
-            /*
-            :params {
-              personId: 10995116277918,
-              countryName: "Hungary",
-              workFromYear: 2011
-            }
-            */
-            MATCH (person:Person {id: $personId })-[:KNOWS*1..2]-(friend:Person)
-            WHERE not(person=friend)
-            WITH DISTINCT friend
-            MATCH (friend)-[workAt:WORK_AT]->(company:Company)-[:IS_LOCATED_IN]->(:Country {name: $countryName })
-            WHERE workAt.workFrom < $workFromYear
-            RETURN
-                    friend.id AS personId,
-                    friend.firstName AS personFirstName,
-                    friend.lastName AS personLastName,
-                    company.name AS organizationName,
-                    workAt.workFrom AS organizationWorkFromYear
-            ORDER BY
-                    organizationWorkFromYear ASC,
-                    toInteger(personId) ASC,
-                    organizationName DESC
-            LIMIT 10""";
+public class InteractiveComplex11 extends LdbcSnbQuery {
+    static final String cypherFile = "interactive-complex-11.cypher";
+
     public InteractiveComplex11() {
-        this.id = 0;
+        super(cypherFile);
     }
 
     @Override
