@@ -24,11 +24,13 @@
 
 package org.polypheny.simpleclient.scenario.ldbcsnb.entities;
 
+import org.polypheny.simpleclient.scenario.ldbcsnb.EdgeEntity;
 import org.polypheny.simpleclient.scenario.ldbcsnb.EntityHandler;
 
 import java.util.List;
+import java.util.Map;
 
-public class PostIsLocatedInCountry extends EntityHandler {
+public class PostIsLocatedInCountry extends EdgeEntity {
     @Override
     public String getPath(String pathPrefix) {
         return pathPrefix + "/bi-sf1-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/dynamic/Post_isLocatedIn_Country/";
@@ -39,5 +41,13 @@ public class PostIsLocatedInCountry extends EntityHandler {
         // TODO: shall we use Country label here?
         String baseQuery = "MATCH (post_%s:Post {id: %s}), (place_%s:Place {id: %s}) CREATE (post_%s)-[:IS_LOCATED_IN {creationDate: \"%s\"}]->(place_%s)";
         return String.format(baseQuery, row.get(1), row.get(1), row.get(2), row.get(2), row.get(1), row.get(0), row.get(2));
+    }
+
+    @Override
+    public Map.Entry<String, String> getBatchQuery(List<String> row) {
+        String matchClause = "(post_%s:Post {id: %s}), (place_%s:Place {id: %s})";
+        String createClause = "(post_%s)-[:IS_LOCATED_IN {creationDate: \"%s\"}]->(place_%s)";
+        return Map.entry(String.format(matchClause, row.get(1), row.get(1), row.get(2), row.get(2)),
+                String.format(createClause, row.get(1), row.get(0), row.get(2)));
     }
 }

@@ -24,11 +24,14 @@
 
 package org.polypheny.simpleclient.scenario.ldbcsnb.entities;
 
+import org.polypheny.simpleclient.scenario.ldbcsnb.EdgeEntity;
 import org.polypheny.simpleclient.scenario.ldbcsnb.EntityHandler;
+import org.polypheny.simpleclient.scenario.ldbcsnb.NodeEntity;
 
 import java.util.List;
+import java.util.Map;
 
-public class Forum extends EntityHandler {
+public class Forum extends NodeEntity {
     @Override
     public String getPath(String pathPrefix) {
         return pathPrefix + "/bi-sf1-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/dynamic/Forum/";
@@ -38,5 +41,11 @@ public class Forum extends EntityHandler {
     public String getQuery(List<String> row) {
         String baseQuery = "CREATE (forum_%s:Forum {creationDate: \"%s\", id: %s, title: \"%s\"})";
         return String.format(baseQuery, row.get(1), row.get(0), row.get(1), row.get(2));
+    }
+
+    @Override
+    public String getBatchQuery(List<String> row) {
+        String baseQuery = "(:Forum {creationDate: \"%s\", id: %s, title: \"%s\"})";
+        return String.format(baseQuery, row.get(0), row.get(1), row.get(2));
     }
 }

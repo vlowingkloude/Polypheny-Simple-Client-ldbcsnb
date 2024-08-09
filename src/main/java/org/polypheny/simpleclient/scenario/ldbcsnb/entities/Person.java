@@ -25,10 +25,11 @@
 package org.polypheny.simpleclient.scenario.ldbcsnb.entities;
 
 import org.polypheny.simpleclient.scenario.ldbcsnb.EntityHandler;
+import org.polypheny.simpleclient.scenario.ldbcsnb.NodeEntity;
 
 import java.util.List;
 
-public class Person extends EntityHandler {
+public class Person extends NodeEntity {
     @Override
     public String getPath(String pathPrefix) {
         return pathPrefix + "/bi-sf1-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/dynamic/Person/";
@@ -38,5 +39,11 @@ public class Person extends EntityHandler {
     public String getQuery(List<String> row) {
         String baseQuery = "CREATE (person_%s:Person {creationDate: \"%s\", id: %s, firstName: \"%s\", lastName: \"%s\", gender: \"%s\", birthday: \"%s\", locationIP: \"%s\", browserUsed: \"%s\", language: \"%s\", email: \"%s\"})";
         return String.format(baseQuery, row.get(1), row.get(0), row.get(1), row.get(2), row.get(3), row.get(4), row.get(5), row.get(6), row.get(7), row.get(8), row.get(9));
+    }
+
+    @Override
+    public String getBatchQuery(List<String> row) {
+        String baseQuery = "(:Person {creationDate: \"%s\", id: %s, firstName: \"%s\", lastName: \"%s\", gender: \"%s\", birthday: \"%s\", locationIP: \"%s\", browserUsed: \"%s\", language: \"%s\", email: \"%s\"})";
+        return String.format(baseQuery, row.get(0), row.get(1), row.get(2), row.get(3), row.get(4), row.get(5), row.get(6), row.get(7), row.get(8), row.get(9));
     }
 }

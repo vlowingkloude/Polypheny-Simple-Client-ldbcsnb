@@ -48,10 +48,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
-import java.util.zip.GZIPInputStream;
+import java.util.*;
 
 public class LdbcSnbBench extends Scenario {
 
@@ -88,6 +85,79 @@ public class LdbcSnbBench extends Scenario {
         } finally {
             commitAndCloseExecutor( executor );
         }
+    }
+
+    private String getSingleQuery(BufferedReader bufferedReader, EntityHandler handler) throws IOException {
+        String line = bufferedReader.readLine();
+        if ( line == null ) {
+            return null;
+        }
+        List<String> row = Arrays.asList(line.split("\\|"));
+        return handler.getQuery(row);
+    }
+
+    private String getBatchQuery(BufferedReader bufferedReader, EntityHandler handler) throws IOException {
+        final int maxQueryLength = 5000;
+        String line;
+        List<String> row;
+        if (handler instanceof NodeEntity) {
+            StringBuilder cypher = new StringBuilder("CREATE ");
+            while (true) {
+                bufferedReader.mark(maxQueryLength);
+                line = bufferedReader.readLine();
+                if ( line == null ) {
+                    if (cypher.length() > 7) {
+                        return cypher.toString();
+                    }
+                    return null;
+                }
+                row = Arrays.asList(line.split("\\|"));
+                if (cypher.length() + ", ".length() + ((NodeEntity) handler).getBatchQuery(row).length() > maxQueryLength) {
+                    bufferedReader.reset();
+                    return cypher.toString();
+                } else {
+                    if (cypher.length() == 7) {
+                        cypher.append(((NodeEntity) handler).getBatchQuery(row));
+                    } else {
+                        cypher.append(", ");
+                        cypher.append(((NodeEntity) handler).getBatchQuery(row));
+                    }
+                }
+            }
+        } else if (handler instanceof EdgeEntity) {
+            StringBuilder matchClause = new StringBuilder("MATCH ");
+            StringBuilder creatClause = new StringBuilder("CREATE ");
+            while (true) {
+                bufferedReader.mark(maxQueryLength);
+                line = bufferedReader.readLine();
+                if ( line == null ) {
+                    if (matchClause.length() > 6) {
+                        return matchClause.toString() + " " + creatClause;
+                    }
+                    return null;
+                }
+                row = Arrays.asList(line.split("\\|"));
+                Map.Entry<String, String> entry = ((EdgeEntity) handler).getBatchQuery(row);
+                if (matchClause.length() + ", ".length() + entry.getKey().length() +
+                        creatClause.length() + ", ".length() + entry.getValue().length() > maxQueryLength) {
+                    bufferedReader.reset();
+                    return matchClause.toString() + " " + creatClause;
+                } else {
+                    if (matchClause.length() == 6) {
+                        matchClause.append(entry.getKey());
+                        creatClause.append(entry.getValue());
+                    } else {
+                        if (matchClause.indexOf(entry.getKey()) == -1) {
+                            matchClause.append(", ");
+                            matchClause.append(entry.getKey());
+                        }
+                        creatClause.append(", ");
+                        creatClause.append(entry.getValue());
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     @Override
@@ -141,16 +211,14 @@ public class LdbcSnbBench extends Scenario {
                     decoder = new InputStreamReader( gzipStream, "UTF-8" );
                     bufferedReader = new BufferedReader( decoder );
                     bufferedReader.readLine(); // skip headers TODO: should we add a flag to indicate if a file has a header?
-                    while ( ( line = bufferedReader.readLine() ) != null ) {
-                        row = Arrays.asList(line.split("\\|"));
-                        executor1.executeQuery( new GraphInsert(handler.getQuery(row)) );
+                    while ( (query = getBatchQuery(bufferedReader, handler)) != null ) {
+                        executor1.executeQuery( new GraphInsert(query) );
                     }
-                } catch (IOException | ExecutorException e) {
+                } catch (Exception e) {
                     throw new RuntimeException( "LDBC SNB benchmark: failed to process LDBC SNB files", e );
                 }
             }
         }
-
     }
 
     @Override

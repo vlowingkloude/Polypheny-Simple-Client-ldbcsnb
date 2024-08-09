@@ -24,11 +24,13 @@
 
 package org.polypheny.simpleclient.scenario.ldbcsnb.entities;
 
+import org.polypheny.simpleclient.scenario.ldbcsnb.EdgeEntity;
 import org.polypheny.simpleclient.scenario.ldbcsnb.EntityHandler;
 
 import java.util.List;
+import java.util.Map;
 
-public class PlaceIsPartOfPlace extends EntityHandler {
+public class PlaceIsPartOfPlace extends EdgeEntity {
     @Override
     public String getPath(String pathPrefix) {
         return pathPrefix + "/bi-sf1-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/static/Place_isPartOf_Place/";
@@ -38,5 +40,13 @@ public class PlaceIsPartOfPlace extends EntityHandler {
     public String getQuery(List<String> row) {
         String baseQuery = "MATCH (place_%s:Place {id: %s}), (place_%s:Place {id: %s}) CREATE (place_%s)-[:IS_PART_OF]->(place_%s)";
         return String.format(baseQuery, row.get(0), row.get(0), row.get(1), row.get(1), row.get(0), row.get(1));
+    }
+
+    @Override
+    public Map.Entry<String, String> getBatchQuery(List<String> row) {
+        String matchClause = "(place_%s:Place {id: %s}), (place_%s:Place {id: %s})";
+        String createClause = "(place_%s)-[:IS_PART_OF]->(place_%s)";
+        return Map.entry(String.format(matchClause, row.get(0), row.get(0), row.get(1), row.get(1)),
+                String.format(createClause, row.get(0), row.get(1)));
     }
 }

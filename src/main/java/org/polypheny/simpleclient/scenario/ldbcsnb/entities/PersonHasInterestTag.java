@@ -24,11 +24,13 @@
 
 package org.polypheny.simpleclient.scenario.ldbcsnb.entities;
 
+import org.polypheny.simpleclient.scenario.ldbcsnb.EdgeEntity;
 import org.polypheny.simpleclient.scenario.ldbcsnb.EntityHandler;
 
 import java.util.List;
+import java.util.Map;
 
-public class PersonHasInterestTag extends EntityHandler {
+public class PersonHasInterestTag extends EdgeEntity {
     @Override
     public String getPath(String pathPrefix) {
         return pathPrefix + "/bi-sf1-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/dynamic/Person_hasInterest_Tag/";
@@ -39,5 +41,13 @@ public class PersonHasInterestTag extends EntityHandler {
         // NOTE: assuming interestId being TagID
         String baseQuery = "MATCH (person_%s:Person {id: %s}), (tag_%s:Tag {id: %s}) CREATE (person_%s)-[:HAS_INTEREST {creationDate: \"%s\"}]->(tag_%s)";
         return String.format(baseQuery, row.get(1), row.get(1), row.get(2), row.get(2), row.get(1), row.get(0), row.get(2));
+    }
+
+    @Override
+    public Map.Entry<String, String> getBatchQuery(List<String> row) {
+        String matchClause = "(person_%s:Person {id: %s}), (tag_%s:Tag {id: %s})";
+        String createClause = "(person_%s)-[:HAS_INTEREST {creationDate: \"%s\"}]->(tag_%s)";
+        return Map.entry(String.format(matchClause, row.get(1), row.get(1), row.get(2), row.get(2)),
+                String.format(createClause, row.get(1), row.get(0), row.get(2)));
     }
 }

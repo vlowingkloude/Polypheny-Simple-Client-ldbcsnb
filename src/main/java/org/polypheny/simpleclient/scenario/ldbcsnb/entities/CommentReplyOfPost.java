@@ -24,11 +24,13 @@
 
 package org.polypheny.simpleclient.scenario.ldbcsnb.entities;
 
+import org.polypheny.simpleclient.scenario.ldbcsnb.EdgeEntity;
 import org.polypheny.simpleclient.scenario.ldbcsnb.EntityHandler;
 
 import java.util.List;
+import java.util.Map;
 
-public class CommentReplyOfPost extends EntityHandler {
+public class CommentReplyOfPost extends EdgeEntity {
     @Override
     public String getPath(String pathPrefix) {
         return pathPrefix + "/bi-sf1-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/dynamic/Comment_replyOf_Post/";
@@ -38,5 +40,13 @@ public class CommentReplyOfPost extends EntityHandler {
     public String getQuery(List<String> row) {
         String baseQuery = "MATCH (comment_%s:Comment {id: %s}), (post_%s:Comment {id: %s}) CREATE (comment_%s)-[:REPLY_OF {creationDate: \"%s\"}]->(post_%s)";
         return String.format(baseQuery, row.get(1), row.get(1), row.get(2), row.get(2), row.get(1), row.get(0), row.get(2));
+    }
+
+    @Override
+    public Map.Entry<String, String> getBatchQuery(List<String> row) {
+        String matchClause = "(comment_%s:Comment {id: %s}), (post_%s:Comment {id: %s})";
+        String createClause = "(comment_%s)-[:REPLY_OF {creationDate: \"%s\"}]->(post_%s)";
+        return Map.entry(String.format(matchClause, row.get(1), row.get(1), row.get(2), row.get(2)),
+                String.format(createClause, row.get(1), row.get(0), row.get(2)));
     }
 }

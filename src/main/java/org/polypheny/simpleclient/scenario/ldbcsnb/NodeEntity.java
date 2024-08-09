@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-6/24/24, 3:32 PM The Polypheny Project
+ * Copyright (c) 2019-8/9/24, 12:03 PM The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -22,28 +22,10 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.scenario.ldbcsnb.entities;
-
-import org.polypheny.simpleclient.scenario.ldbcsnb.EntityHandler;
-import org.polypheny.simpleclient.scenario.ldbcsnb.NodeEntity;
+package org.polypheny.simpleclient.scenario.ldbcsnb;
 
 import java.util.List;
 
-public class TagClass extends NodeEntity {
-    @Override
-    public String getPath(String pathPrefix) {
-        return pathPrefix + "/bi-sf1-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/static/TagClass/";
-    }
-
-    @Override
-    public String getQuery(List<String> row) {
-        String baseQuery = "CREATE (tagclass_%s:TagClass {id: %s, name: \"%s\", url: \"%s\"})";
-        return String.format(baseQuery, row.get(0), row.get(0), row.get(1), row.get(2));
-    }
-
-    @Override
-    public String getBatchQuery(List<String> row) {
-        String baseQuery = "(:TagClass {id: %s, name: \"%s\", url: \"%s\"})";
-        return String.format(baseQuery, row.get(0), row.get(1), row.get(2));
-    }
+public abstract class NodeEntity extends EntityHandler{
+    public abstract String getBatchQuery(List<String> row);
 }

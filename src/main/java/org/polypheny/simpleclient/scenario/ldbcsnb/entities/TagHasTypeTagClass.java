@@ -24,11 +24,13 @@
 
 package org.polypheny.simpleclient.scenario.ldbcsnb.entities;
 
+import org.polypheny.simpleclient.scenario.ldbcsnb.EdgeEntity;
 import org.polypheny.simpleclient.scenario.ldbcsnb.EntityHandler;
 
 import java.util.List;
+import java.util.Map;
 
-public class TagHasTypeTagClass extends EntityHandler {
+public class TagHasTypeTagClass extends EdgeEntity {
     @Override
     public String getPath(String pathPrefix) {
         return pathPrefix + "/bi-sf1-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/static/Tag_hasType_TagClass/";
@@ -38,5 +40,13 @@ public class TagHasTypeTagClass extends EntityHandler {
     public String getQuery(List<String> row) {
         String baseQuery = "MATCH (tag_%s:Tag {id: %s}), (tagclass_%s:TagClass {id: %s}) CREATE (tag_%s)-[:HAS_TYPE]->(tagclass_%s)";
         return String.format(baseQuery, row.get(0), row.get(0), row.get(1), row.get(1), row.get(0), row.get(1));
+    }
+
+    @Override
+    public Map.Entry<String, String> getBatchQuery(List<String> row) {
+        String matchClause = "(tag_%s:Tag {id: %s}), (tagclass_%s:TagClass {id: %s})";
+        String createClause = "(tag_%s)-[:HAS_TYPE]->(tagclass_%s)";
+        return Map.entry(String.format(matchClause, row.get(0), row.get(0), row.get(1), row.get(1)),
+                String.format(createClause, row.get(0), row.get(1)));
     }
 }

@@ -25,10 +25,11 @@
 package org.polypheny.simpleclient.scenario.ldbcsnb.entities;
 
 import org.polypheny.simpleclient.scenario.ldbcsnb.EntityHandler;
+import org.polypheny.simpleclient.scenario.ldbcsnb.NodeEntity;
 
 import java.util.List;
 
-public class Organisation extends EntityHandler {
+public class Organisation extends NodeEntity {
 
     @Override
     public String getPath(String pathPrefix) {
@@ -39,5 +40,11 @@ public class Organisation extends EntityHandler {
     public String getQuery(List<String> row) {
         String baseQuery = "CREATE (organisation_%s:Organisation:%s {id: %s, name: \"%s\", url: \"%s\"})";
         return String.format(baseQuery, row.get(0), row.get(1), row.get(0), row.get(2), row.get(3));
+    }
+
+    @Override
+    public String getBatchQuery(List<String> row) {
+        String baseQuery = "(:Organisation:%s {id: %s, name: \"%s\", url: \"%s\"})";
+        return String.format(baseQuery, row.get(1), row.get(0), row.get(2), row.get(3));
     }
 }

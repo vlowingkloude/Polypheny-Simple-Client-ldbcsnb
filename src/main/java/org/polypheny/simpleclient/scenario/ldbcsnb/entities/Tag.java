@@ -25,10 +25,11 @@
 package org.polypheny.simpleclient.scenario.ldbcsnb.entities;
 
 import org.polypheny.simpleclient.scenario.ldbcsnb.EntityHandler;
+import org.polypheny.simpleclient.scenario.ldbcsnb.NodeEntity;
 
 import java.util.List;
 
-public class Tag extends EntityHandler {
+public class Tag extends NodeEntity {
     @Override
     public String getPath(String pathPrefix) {
         return pathPrefix + "/bi-sf1-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/static/Tag/";
@@ -38,5 +39,11 @@ public class Tag extends EntityHandler {
     public String getQuery(List<String> row) {
         String baseQuery = "CREATE (tag_%s:Tag {id: %s, name: \"%s\", url: \"%s\"})";
         return String.format(baseQuery, row.get(0), row.get(0), row.get(1), row.get(2));
+    }
+
+    @Override
+    public String getBatchQuery(List<String> row) {
+        String baseQuery = "(:Tag {id: %s, name: \"%s\", url: \"%s\"})";
+        return String.format(baseQuery, row.get(0), row.get(1), row.get(2));
     }
 }
