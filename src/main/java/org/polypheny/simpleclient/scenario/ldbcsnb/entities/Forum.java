@@ -45,7 +45,7 @@ public class Forum extends NodeEntity {
 
     @Override
     public String getBatchQuery(List<String> row) {
-        String baseQuery = "(:Forum {creationDate: \"%s\", id: %s, title: \"%s\"})";
-        return String.format(baseQuery, row.get(0), row.get(1), row.get(2));
+        String baseQuery = "(forum_%s:Forum {creationDate: \"%s\", id: %s, title: \"%s\"})";
+        return String.format(baseQuery, row.get(1), row.get(0), row.get(1), row.get(2));
     }
 }

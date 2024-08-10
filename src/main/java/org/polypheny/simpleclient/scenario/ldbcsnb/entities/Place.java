@@ -44,7 +44,7 @@ public class Place extends NodeEntity {
 
     @Override
     public String getBatchQuery(List<String> row) {
-        String baseQuery = "(:Place:%s {id: %s, name: \"%s\", url: \"%s\"})";
-        return String.format(baseQuery, row.get(3), row.get(0), row.get(1), row.get(2));
+        String baseQuery = "(place_%s:Place:%s {id: %s, name: \"%s\", url: \"%s\"})";
+        return String.format(baseQuery, row.get(0), row.get(3), row.get(0), row.get(1), row.get(2));
     }
 }

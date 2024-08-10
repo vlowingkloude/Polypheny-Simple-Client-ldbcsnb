@@ -43,7 +43,7 @@ public class Tag extends NodeEntity {
 
     @Override
     public String getBatchQuery(List<String> row) {
-        String baseQuery = "(:Tag {id: %s, name: \"%s\", url: \"%s\"})";
-        return String.format(baseQuery, row.get(0), row.get(1), row.get(2));
+        String baseQuery = "(tag_%s:Tag {id: %s, name: \"%s\", url: \"%s\"})";
+        return String.format(baseQuery, row.get(0), row.get(0), row.get(1), row.get(2));
     }
 }

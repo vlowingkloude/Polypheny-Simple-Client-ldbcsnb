@@ -44,7 +44,7 @@ public class Organisation extends NodeEntity {
 
     @Override
     public String getBatchQuery(List<String> row) {
-        String baseQuery = "(:Organisation:%s {id: %s, name: \"%s\", url: \"%s\"})";
-        return String.format(baseQuery, row.get(1), row.get(0), row.get(2), row.get(3));
+        String baseQuery = "(organisation_%s:Organisation:%s {id: %s, name: \"%s\", url: \"%s\"})";
+        return String.format(baseQuery, row.get(0), row.get(1), row.get(0), row.get(2), row.get(3));
     }
 }
