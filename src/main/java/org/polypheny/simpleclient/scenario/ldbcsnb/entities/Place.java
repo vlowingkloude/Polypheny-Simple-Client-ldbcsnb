@@ -24,7 +24,6 @@
 
 package org.polypheny.simpleclient.scenario.ldbcsnb.entities;
 
-import org.polypheny.simpleclient.scenario.ldbcsnb.EntityHandler;
 import org.polypheny.simpleclient.scenario.ldbcsnb.NodeEntity;
 
 import java.util.List;
@@ -32,8 +31,8 @@ import java.util.List;
 public class Place extends NodeEntity {
 
     @Override
-    public String getPath(String pathPrefix) {
-        return pathPrefix + "/bi-sf1-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/static/Place/";
+    public String getPath(String pathPrefix, int scaleFactor) {
+        return pathPrefix + String.format("/bi-sf%d-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/static/Place/", scaleFactor);
     }
 
     @Override

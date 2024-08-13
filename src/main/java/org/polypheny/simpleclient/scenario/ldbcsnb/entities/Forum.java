@@ -24,17 +24,14 @@
 
 package org.polypheny.simpleclient.scenario.ldbcsnb.entities;
 
-import org.polypheny.simpleclient.scenario.ldbcsnb.EdgeEntity;
-import org.polypheny.simpleclient.scenario.ldbcsnb.EntityHandler;
 import org.polypheny.simpleclient.scenario.ldbcsnb.NodeEntity;
 
 import java.util.List;
-import java.util.Map;
 
 public class Forum extends NodeEntity {
     @Override
-    public String getPath(String pathPrefix) {
-        return pathPrefix + "/bi-sf1-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/dynamic/Forum/";
+    public String getPath(String pathPrefix, int scaleFactor) {
+        return pathPrefix + String.format("/bi-sf%d-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/dynamic/Forum/", scaleFactor);
     }
 
     @Override

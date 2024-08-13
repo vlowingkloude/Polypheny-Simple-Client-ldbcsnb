@@ -34,7 +34,6 @@ import org.apache.commons.compress.compressors.CompressorInputStream;
 import org.apache.commons.io.IOUtils;
 import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor;
-import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.executor.PolyphenyDbCypherExecutor;
 import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
 import org.polypheny.simpleclient.main.CsvWriter;
@@ -202,7 +201,7 @@ public class LdbcSnbBench extends Scenario {
         List<String> row;
         File[] files;
         for (EntityHandler handler : EntityHandler.getEntities()) {
-            path = handler.getPath(dataPath);
+            path = handler.getPath(dataPath, scaleFactor);
             files = new File( path ).listFiles( (dir, name) -> name.endsWith(".csv.gz") );
             for (File file : files) {
                 try {

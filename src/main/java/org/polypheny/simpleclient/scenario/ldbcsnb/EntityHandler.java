@@ -27,10 +27,9 @@ package org.polypheny.simpleclient.scenario.ldbcsnb;
 import org.polypheny.simpleclient.scenario.ldbcsnb.entities.*;
 
 import java.util.List;
-import java.util.Map;
 
 public abstract class EntityHandler {
-    public abstract String getPath(String pathPrefix);
+    public abstract String getPath(String pathPrefix, int scaleFactor);
     public abstract String getQuery(List<String> row);
 
     public static EntityHandler[] getEntities() {

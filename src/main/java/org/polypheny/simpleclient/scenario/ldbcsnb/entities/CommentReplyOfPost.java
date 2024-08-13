@@ -25,15 +25,14 @@
 package org.polypheny.simpleclient.scenario.ldbcsnb.entities;
 
 import org.polypheny.simpleclient.scenario.ldbcsnb.EdgeEntity;
-import org.polypheny.simpleclient.scenario.ldbcsnb.EntityHandler;
 
 import java.util.List;
 import java.util.Map;
 
 public class CommentReplyOfPost extends EdgeEntity {
     @Override
-    public String getPath(String pathPrefix) {
-        return pathPrefix + "/bi-sf1-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/dynamic/Comment_replyOf_Post/";
+    public String getPath(String pathPrefix, int scaleFactor) {
+        return pathPrefix + String.format("/bi-sf%d-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/dynamic/Comment_replyOf_Post/", scaleFactor);
     }
 
     @Override
