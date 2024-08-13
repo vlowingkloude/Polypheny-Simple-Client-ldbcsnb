@@ -38,14 +38,14 @@ public class PersonLikesPost extends EdgeEntity {
 
     @Override
     public String getQuery(List<String> row) {
-        String baseQuery = "MATCH (person_%s:Person {id: %s}), (post_%s:Post {id: %s}) CREATE (person_%s)-[:LIKES {creationDate: \"%s\"}]->(post_%s)";
+        String baseQuery = "MATCH (person_%s:Person {id: %s}), (post_%s:Post {id: %s}) CREATE (person_%s)-[:LIKES {creationDate: DATETIME(\"%s\")}]->(post_%s)";
         return String.format(baseQuery, row.get(1), row.get(1), row.get(2), row.get(2), row.get(1), row.get(0), row.get(2));
     }
 
     @Override
     public Map.Entry<String, String> getBatchQuery(List<String> row) {
         String matchClause = "(person_%s:Person {id: %s}), (post_%s:Post {id: %s})";
-        String createClause = "(person_%s)-[:LIKES {creationDate: \"%s\"}]->(post_%s)";
+        String createClause = "(person_%s)-[:LIKES {creationDate: DATETIME(\"%s\")}]->(post_%s)";
         return Map.entry(String.format(matchClause, row.get(1), row.get(1), row.get(2), row.get(2)),
                 String.format(createClause, row.get(1), row.get(0), row.get(2)));
     }

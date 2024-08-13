@@ -38,13 +38,13 @@ public class Comment extends NodeEntity {
     @Override
     public String getQuery(List<String> row) {
         // TODO: shall we use message_id here? OR use Comment_id?
-        String baseQuery = "CREATE (comment_%s:Message:Comment {creationDate: \"%s\", id: %s, locationIP: \"%s\", browserUsed: \"%s\", content: \"%s\", length: %s})";
+        String baseQuery = "CREATE (comment_%s:Message:Comment {creationDate: DATETIME(\"%s\"), id: %s, locationIP: \"%s\", browserUsed: \"%s\", content: \"%s\", length: %s})";
         return String.format(baseQuery, row.get(1), row.get(0), row.get(1), row.get(2), row.get(3), row.get(4), row.get(5));
     }
 
     @Override
     public String getBatchQuery(List<String> row) {
-        String baseQuery = "(comment_%s:Message:Comment {creationDate: \"%s\", id: %s, locationIP: \"%s\", browserUsed: \"%s\", content: \"%s\", length: %s})";
+        String baseQuery = "(comment_%s:Message:Comment {creationDate: DATETIME(\"%s\"), id: %s, locationIP: \"%s\", browserUsed: \"%s\", content: \"%s\", length: %s})";
         return String.format(baseQuery, row.get(1), row.get(0), row.get(1), row.get(2), row.get(3), row.get(4), row.get(5));
     }
 }

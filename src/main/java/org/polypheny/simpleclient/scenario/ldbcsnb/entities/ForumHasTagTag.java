@@ -38,14 +38,14 @@ public class ForumHasTagTag extends EdgeEntity {
 
     @Override
     public String getQuery(List<String> row) {
-        String baseQuery = "MATCH (forum_%s:Forum {id: %s}), (tag_%s:Tag {id: %s}) CREATE (forum_%s)-[:HAS_TAG {creationDate: \"%s\"}]->(tag_%s)";
+        String baseQuery = "MATCH (forum_%s:Forum {id: %s}), (tag_%s:Tag {id: %s}) CREATE (forum_%s)-[:HAS_TAG {creationDate: DATETIME(\"%s\")}]->(tag_%s)";
         return String.format(baseQuery, row.get(1), row.get(1), row.get(2), row.get(2), row.get(1), row.get(0), row.get(2));
     }
 
     @Override
     public Map.Entry<String, String> getBatchQuery(List<String> row) {
         String matchClause = "(forum_%s:Forum {id: %s}), (tag_%s:Tag {id: %s})";
-        String createClause = "(forum_%s)-[:HAS_TAG {creationDate: \"%s\"}]->(tag_%s)";
+        String createClause = "(forum_%s)-[:HAS_TAG {creationDate: DATETIME(\"%s\")}]->(tag_%s)";
         return Map.entry(String.format(matchClause, row.get(1), row.get(1), row.get(2), row.get(2)),
                 String.format(createClause, row.get(1), row.get(0), row.get(2)));
     }

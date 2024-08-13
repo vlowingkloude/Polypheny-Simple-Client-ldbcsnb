@@ -38,14 +38,14 @@ public class ForumHasModeratorPerson extends EdgeEntity {
 
     @Override
     public String getQuery(List<String> row) {
-        String baseQuery = "MATCH (forum_%s:Forum {id: %s}), (person_%s:Person {id: %s}) CREATE (forum_%s)-[:HAS_MODERATOR {creationDate: \"%s\"}]->(person_%s)";
+        String baseQuery = "MATCH (forum_%s:Forum {id: %s}), (person_%s:Person {id: %s}) CREATE (forum_%s)-[:HAS_MODERATOR {creationDate: DATETIME(\"%s\")}]->(person_%s)";
         return String.format(baseQuery, row.get(1), row.get(1), row.get(2), row.get(2), row.get(1), row.get(0), row.get(2));
     }
 
     @Override
     public Map.Entry<String, String> getBatchQuery(List<String> row) {
         String matchClause = "(forum_%s:Forum {id: %s}), (person_%s:Person {id: %s})";
-        String createClause = "(forum_%s)-[:HAS_MODERATOR {creationDate: \"%s\"}]->(person_%s)";
+        String createClause = "(forum_%s)-[:HAS_MODERATOR {creationDate: DATETIME(\"%s\")}]->(person_%s)";
         return Map.entry(String.format(matchClause, row.get(1), row.get(1), row.get(2), row.get(2)),
                 String.format(createClause, row.get(1), row.get(0), row.get(2)));
     }

@@ -38,14 +38,14 @@ public class PersonStudyAtUniversity extends EdgeEntity {
 
     @Override
     public String getQuery(List<String> row) {
-        String baseQuery = "MATCH (person_%s:Person {id: %s}), (organisation_%s:University {id: %s}) CREATE (person_%s)-[:STUDY_AT {creationDate: \"%s\", classYear: %s}]->(organisation_%s)";
+        String baseQuery = "MATCH (person_%s:Person {id: %s}), (organisation_%s:University {id: %s}) CREATE (person_%s)-[:STUDY_AT {creationDate: DATETIME(\"%s\"), classYear: %s}]->(organisation_%s)";
         return String.format(baseQuery, row.get(1), row.get(1), row.get(2), row.get(2), row.get(1), row.get(0), row.get(3), row.get(2));
     }
 
     @Override
     public Map.Entry<String, String> getBatchQuery(List<String> row) {
         String matchClause = "(person_%s:Person {id: %s}), (organisation_%s:University {id: %s})";
-        String createClause = "(person_%s)-[:STUDY_AT {creationDate: \"%s\", classYear: %s}]->(organisation_%s)";
+        String createClause = "(person_%s)-[:STUDY_AT {creationDate: DATETIME(\"%s\"), classYear: %s}]->(organisation_%s)";
         return Map.entry(String.format(matchClause, row.get(1), row.get(1), row.get(2), row.get(2)),
                 String.format(createClause, row.get(1), row.get(0), row.get(3), row.get(2)));
     }
