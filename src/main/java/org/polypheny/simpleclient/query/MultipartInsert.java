@@ -29,24 +29,28 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import kong.unirest.HttpRequest;
-import kong.unirest.MultipartBody;
-import kong.unirest.Unirest;
+import kong.unirest.core.HttpRequest;
+import kong.unirest.core.MultipartBody;
+import kong.unirest.core.Unirest;
 
 
 public abstract class MultipartInsert extends BatchableInsert {
 
     Map<String, File> files = new HashMap<>();
 
+
     public MultipartInsert( boolean expectResult ) {
         super( expectResult );
     }
+
 
     public void setFile( String column, File f ) {
         files.put( column, f );
     }
 
+
     public abstract Map<String, String> getRestParameters();
+
 
     public HttpRequest<?> buildMultipartInsert() {
         MultipartBody body = Unirest.post( "{protocol}://{host}:{port}/restapi/v1/multipart" ).multiPartContent();
@@ -66,6 +70,7 @@ public abstract class MultipartInsert extends BatchableInsert {
         }
         return body;
     }
+
 
     public void cleanup() {
         files.forEach( ( key, file ) -> file.delete() );
