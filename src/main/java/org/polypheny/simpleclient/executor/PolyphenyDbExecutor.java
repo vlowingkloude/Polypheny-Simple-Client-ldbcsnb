@@ -38,10 +38,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import kong.unirest.core.HttpResponse;
 import kong.unirest.core.Unirest;
+import kong.unirest.core.UnirestInstance;
 import kong.unirest.core.json.JSONArray;
 import kong.unirest.core.json.JSONObject;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.control.client.PolyphenyControlConnector;
@@ -722,34 +721,37 @@ public interface PolyphenyDbExecutor extends Executor {
         private final List<PolyphenyStatus> statuses = new ArrayList<>();
 
         private final String url;
+        private final UnirestInstance unirest;
 
 
         private StatusGatherer() {
             url = "http://" + ChronosCommand.hostname + ":" + PolyphenyVersionSwitch.getInstance().uiPort + "/status/";
+            unirest = Unirest.spawnInstance();
+            unirest.config().requestTimeout( 30000 );
         }
 
 
         public PolyphenyStatus gatherOnce() {
             return new PolyphenyStatus(
-                    Long.parseLong( Unirest.get( url + "memory-current" ).asString().getBody() ),
-                    Integer.parseInt( Unirest.get( url + "transactions-active" ).asString().getBody() ),
-                    Integer.parseInt( Unirest.get( url + "monitoring-queue" ).asString().getBody() )
+                    Long.parseLong( unirest.get( url + "memory-current" ).asString().getBody() ),
+                    Integer.parseInt( unirest.get( url + "transactions-active" ).asString().getBody() ),
+                    Integer.parseInt( unirest.get( url + "monitoring-queue" ).asString().getBody() )
             );
         }
 
 
         public PolyphenyFullStatus gatherFullOnce() {
             return new PolyphenyFullStatus(
-                    Unirest.get( url + "uuid" ).asString().getBody(),
-                    Unirest.get( url + "version" ).asString().getBody(),
-                    Unirest.get( url + "hash" ).asString().getBody(),
-                    Long.parseLong( Unirest.get( url + "memory-current" ).asString().getBody() ),
-                    Integer.parseInt( Unirest.get( url + "transactions-since-restart" ).asString().getBody() ),
-                    Integer.parseInt( Unirest.get( url + "transactions-active" ).asString().getBody() ),
-                    Integer.parseInt( Unirest.get( url + "cache-implementation" ).asString().getBody() ),
-                    Integer.parseInt( Unirest.get( url + "cache-queryplan" ).asString().getBody() ),
-                    Integer.parseInt( Unirest.get( url + "cache-routingplan" ).asString().getBody() ),
-                    Integer.parseInt( Unirest.get( url + "monitoring-queue" ).asString().getBody() )
+                    unirest.get( url + "uuid" ).asString().getBody(),
+                    unirest.get( url + "version" ).asString().getBody(),
+                    unirest.get( url + "hash" ).asString().getBody(),
+                    Long.parseLong( unirest.get( url + "memory-current" ).asString().getBody() ),
+                    Integer.parseInt( unirest.get( url + "transactions-since-restart" ).asString().getBody() ),
+                    Integer.parseInt( unirest.get( url + "transactions-active" ).asString().getBody() ),
+                    Integer.parseInt( unirest.get( url + "cache-implementation" ).asString().getBody() ),
+                    Integer.parseInt( unirest.get( url + "cache-queryplan" ).asString().getBody() ),
+                    Integer.parseInt( unirest.get( url + "cache-routingplan" ).asString().getBody() ),
+                    Integer.parseInt( unirest.get( url + "monitoring-queue" ).asString().getBody() )
             );
         }
 
@@ -759,14 +761,11 @@ public interface PolyphenyDbExecutor extends Executor {
                 throw new RuntimeException( "Status gathering is already running!" );
             }
             log.info( "Start gather status data from Polypheny every " + intervalSeconds + " seconds." );
-            Runnable statusGatherer = new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        statuses.add( gatherOnce() );
-                    } catch ( Exception e ) {
-                        log.error( "Unable to gather status data from Polypheny", e );
-                    }
+            Runnable statusGatherer = () -> {
+                try {
+                    statuses.add( gatherOnce() );
+                } catch ( Exception e ) {
+                    log.error( "Unable to gather status data from Polypheny", e );
                 }
             };
             statusGatheringService = Executors.newScheduledThreadPool( 1 );
@@ -793,45 +792,15 @@ public interface PolyphenyDbExecutor extends Executor {
         }
 
 
-        @Data
-        public static class PolyphenyStatus {
-
-            protected final long currentMemory;
-            protected final int numOfActiveTrx;
-            protected final int monitoringQueueSize;
+        public record PolyphenyStatus( long currentMemory, int numOfActiveTrx, int monitoringQueueSize ) {
 
         }
 
 
-        @EqualsAndHashCode(callSuper = true)
-        @Getter
-        public static class PolyphenyFullStatus extends PolyphenyStatus {
-
-            PolyphenyFullStatus( String uui, String version, String hash, long currentMemory, long trxCount, int numOfActiveTrx, int implementationCacheSize, int queryPlanCacheSize, int routingPlanCacheSize, int monitoringQueueSize ) {
-                super( currentMemory, numOfActiveTrx, monitoringQueueSize );
-                this.uuid = uui;
-                this.version = version;
-                this.hash = hash;
-                this.trxCount = trxCount;
-                this.implementationCacheSize = implementationCacheSize;
-                this.queryPlanCacheSize = queryPlanCacheSize;
-                this.routingPlanCacheSize = routingPlanCacheSize;
-            }
-
-
-            private final String uuid;
-            private final String version;
-            private final String hash;
-
-            private final long trxCount;
-
-            private final int implementationCacheSize;
-            private final int queryPlanCacheSize;
-            private final int routingPlanCacheSize;
+        public record PolyphenyFullStatus( String uui, String version, String hash, long currentMemory, long trxCount, int numOfActiveTrx, int implementationCacheSize, int queryPlanCacheSize, int routingPlanCacheSize, int monitoringQueueSize ) {
 
         }
 
     }
-
 
 }

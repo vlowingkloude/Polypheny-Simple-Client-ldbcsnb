@@ -25,8 +25,6 @@
 package org.polypheny.simpleclient.scenario.docbench;
 
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -37,8 +35,6 @@ import java.util.Properties;
 import java.util.Random;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor;
@@ -47,17 +43,18 @@ import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
+import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.query.QueryListEntry;
 import org.polypheny.simpleclient.query.RawQuery;
-import org.polypheny.simpleclient.scenario.Scenario;
+import org.polypheny.simpleclient.scenario.PolyphenyScenario;
 import org.polypheny.simpleclient.scenario.docbench.queryBuilder.PutProductQueryBuilder;
 import org.polypheny.simpleclient.scenario.docbench.queryBuilder.SearchProductQueryBuilder;
 import org.polypheny.simpleclient.scenario.docbench.queryBuilder.UpdateProductQueryBuilder;
 
 
 @Slf4j
-public class DocBench extends Scenario {
+public class DocBench extends PolyphenyScenario {
 
     private final DocBenchConfig config;
     private final List<Long> measuredTimes;
@@ -99,7 +96,7 @@ public class DocBench extends Scenario {
                     break;
                 }
             }
-            if ( onStore.equals( "" ) ) {
+            if ( onStore.isEmpty() ) {
                 throw new RuntimeException( "No suitable data store found for optimized placing of the DocBench collection." );
             } else {
                 onStore = ".store(\"" + onStore + "\")";
@@ -140,63 +137,7 @@ public class DocBench extends Scenario {
         addNumberOfTimes( queryList, new SearchProductQueryBuilder( random, valuesPool, config ), config.numberOfFindQueries );
         addNumberOfTimes( queryList, new UpdateProductQueryBuilder( random, valuesPool, config ), config.numberOfUpdateQueries );
         addNumberOfTimes( queryList, new PutProductQueryBuilder( random, valuesPool, config ), config.numberOfPutQueries );
-        Collections.shuffle( queryList, random );
-
-        // This dumps the MQL queries independent of the selected interface
-        if ( outputDirectory != null && dumpQueryList ) {
-            log.info( "Dump query list..." );
-            try {
-                FileWriter fw = new FileWriter( outputDirectory.getPath() + File.separator + "queryList" );
-                queryList.forEach( query -> {
-                    try {
-                        fw.append( query.query.getMongoQl() ).append( "\n" );
-                    } catch ( IOException e ) {
-                        log.error( "Error while dumping query list", e );
-                    }
-                } );
-                fw.close();
-            } catch ( IOException e ) {
-                log.error( "Error while dumping query list", e );
-            }
-        }
-
-        log.info( "Executing benchmark..." );
-        (new Thread( new ProgressReporter.ReportQueryListProgress( queryList, progressReporter ) )).start();
-        long startTime = System.nanoTime();
-
-        ArrayList<EvaluationThread> threads = new ArrayList<>();
-        for ( int i = 0; i < numberOfThreads; i++ ) {
-            threads.add( new EvaluationThread( queryList, executorFactory.createExecutorInstance( csvWriter, NAMESPACE ) ) );
-        }
-
-        EvaluationThreadMonitor threadMonitor = new EvaluationThreadMonitor( threads );
-        threads.forEach( t -> t.setThreadMonitor( threadMonitor ) );
-
-        for ( EvaluationThread thread : threads ) {
-            thread.start();
-        }
-
-        for ( Thread thread : threads ) {
-            try {
-                thread.join();
-            } catch ( InterruptedException e ) {
-                throw new RuntimeException( "Unexpected interrupt", e );
-            }
-        }
-
-        executeRuntime = System.nanoTime() - startTime;
-
-        for ( EvaluationThread thread : threads ) {
-            thread.closeExecutor();
-        }
-
-        if ( threadMonitor.aborted ) {
-            throw new RuntimeException( "Exception while executing benchmark", threadMonitor.exception );
-        }
-
-        log.info( "run time: {} s", executeRuntime / 1000000000 );
-
-        return executeRuntime;
+        return commonExecute( queryList, progressReporter, outputDirectory, numberOfThreads, Query::getMongoQl, () -> executorFactory.createExecutorInstance( csvWriter, NAMESPACE ), random );
     }
 
 
@@ -233,136 +174,9 @@ public class DocBench extends Scenario {
     }
 
 
-    private class EvaluationThread extends Thread {
-
-        private final Executor executor;
-        private final List<QueryListEntry> theQueryList;
-        private boolean abort = false;
-        @Setter
-        private EvaluationThreadMonitor threadMonitor;
-
-
-        EvaluationThread( List<QueryListEntry> queryList, Executor executor ) {
-            super( "EvaluationThread" );
-            this.executor = executor;
-            theQueryList = queryList;
-        }
-
-
-        @Override
-        public void run() {
-            long measuredTimeStart;
-            long measuredTime;
-            QueryListEntry queryListEntry;
-
-            while ( !theQueryList.isEmpty() && !abort ) {
-                measuredTimeStart = System.nanoTime();
-                try {
-                    queryListEntry = theQueryList.remove( 0 );
-                } catch ( IndexOutOfBoundsException e ) { // This is neither nice nor efficient...
-                    // This can happen due to concurrency if two threads enter the while-loop and there is only one thread left
-                    // Simply leaf the loop
-                    break;
-                }
-                try {
-                    executor.executeQuery( queryListEntry.query );
-                } catch ( ExecutorException e ) {
-                    log.error( "Caught exception while executing queries", e );
-                    threadMonitor.notifyAboutError( e );
-                    try {
-                        executor.executeRollback();
-                    } catch ( ExecutorException ex ) {
-                        log.error( "Error while rollback", e );
-                    }
-                    throw new RuntimeException( e );
-                }
-                measuredTime = System.nanoTime() - measuredTimeStart;
-                measuredTimes.add( measuredTime );
-                measuredTimePerQueryType.get( queryListEntry.templateId ).add( measuredTime );
-                if ( commitAfterEveryQuery ) {
-                    try {
-                        executor.executeCommit();
-                    } catch ( ExecutorException e ) {
-                        log.error( "Caught exception while committing", e );
-                        threadMonitor.notifyAboutError( e );
-                        try {
-                            executor.executeRollback();
-                        } catch ( ExecutorException ex ) {
-                            log.error( "Error while rollback", e );
-                        }
-                        throw new RuntimeException( e );
-                    }
-                }
-            }
-
-            try {
-                executor.executeCommit();
-            } catch ( ExecutorException e ) {
-                log.error( "Caught exception while committing", e );
-                threadMonitor.notifyAboutError( e );
-                try {
-                    executor.executeRollback();
-                } catch ( ExecutorException ex ) {
-                    log.error( "Error while rollback", e );
-                }
-                throw new RuntimeException( e );
-            }
-
-            executor.flushCsvWriter();
-        }
-
-
-        public void abort() {
-            this.abort = true;
-        }
-
-
-        public void closeExecutor() {
-            commitAndCloseExecutor( executor );
-        }
-
-    }
-
-
-    private class EvaluationThreadMonitor {
-
-        private final List<EvaluationThread> threads;
-        @Getter
-        private Exception exception;
-        @Getter
-        private boolean aborted;
-
-
-        public EvaluationThreadMonitor( List<EvaluationThread> threads ) {
-            this.threads = threads;
-            this.aborted = false;
-        }
-
-
-        public void abortAll() {
-            this.aborted = true;
-            threads.forEach( EvaluationThread::abort );
-        }
-
-
-        public void notifyAboutError( Exception e ) {
-            exception = e;
-            abortAll();
-        }
-
-    }
-
-
     @Override
     public void analyze( Properties properties, File outputDirectory ) {
-        properties.put( "measuredTime", calculateMean( measuredTimes ) );
-        measuredTimePerQueryType.forEach( ( templateId, time ) -> {
-            calculateResults( queryTypes, properties, templateId, time );
-        } );
-        properties.put( "queryTypes_maxId", queryTypes.size() );
-        properties.put( "executeRuntime", executeRuntime / 1000000000.0 );
-        properties.put( "numberOfQueries", measuredTimes.size() );
-        properties.put( "throughput", (measuredTimes.size() / (executeRuntime / 1000000000.0)) );
+        super.analyze( properties, outputDirectory );
         properties.put( "numberOfFindQueries", measuredTimePerQueryType.get( 1 ).size() );
         properties.put( "numberOfUpdateQueries", measuredTimePerQueryType.get( 2 ).size() );
         properties.put( "numberOfPutQueries", measuredTimePerQueryType.get( 3 ).size() );

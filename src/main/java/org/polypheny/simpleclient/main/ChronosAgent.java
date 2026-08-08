@@ -115,6 +115,8 @@ public class ChronosAgent extends AbstractChronosAgent {
     private final boolean dumpQueryList;
     private QueryMode queryMode;
 
+    private String dockerContainerName = null;
+
 
     public ChronosAgent( InetAddress address, int port, boolean secure, boolean useHostname, String environment, String[] supports, boolean writeCsv, boolean dumpQueryList ) {
         super( address, port, secure, useHostname, environment );
@@ -176,6 +178,10 @@ public class ChronosAgent extends AbstractChronosAgent {
         // Parse CDL
         Map<String, String> parsedConfig = parseConfig( chronosJob );
 
+        if ( !parsedConfig.containsKey( "queryMode" ) ) {
+            throw new RuntimeException( "Query mode not specified" );
+        }
+
         switch ( parsedConfig.get( "queryMode" ) ) {
             case "Table":
                 queryMode = QueryMode.TABLE;
@@ -212,6 +218,7 @@ public class ChronosAgent extends AbstractChronosAgent {
                 executorFactory = new SurrealDBExecutorFactory( ChronosCommand.hostname, "8989", true );
                 break;
             case "postgres":
+                dockerContainerName = DockerLauncher.launch( "postgres", "polypheny/postgres:latest", Map.of( "POSTGRES_PASSWORD", "postgres" ), List.of( 5432 ), () -> PostgresInstance.tryConnect( ChronosCommand.hostname ) );
                 executorFactory = new PostgresExecutorFactory( ChronosCommand.hostname, Boolean.parseBoolean( parsedConfig.get( "prepareStatements" ) ) );
                 break;
             case "monetdb":
@@ -224,6 +231,7 @@ public class ChronosAgent extends AbstractChronosAgent {
                 executorFactory = new OltpBenchPolyphenyDbExecutorFactory( ChronosCommand.hostname );
                 break;
             case "oltpbench-postgres":
+                dockerContainerName = DockerLauncher.launch( "oltpbench-postgres", "polypheny/postgres:latest", Map.of( "POSTGRES_PASSWORD", "postgres" ), List.of( 5432 ), () -> PostgresInstance.tryConnect( ChronosCommand.hostname ) );
                 executorFactory = new OltpBenchPostgresExecutorFactory( ChronosCommand.hostname );
                 break;
             default:
@@ -350,13 +358,13 @@ public class ChronosAgent extends AbstractChronosAgent {
                 throw new RuntimeException( "Unknown system: " + config.system );
         }
 
-        if ( databaseInstance instanceof PolyphenyDbInstance ) {
+        if ( databaseInstance instanceof PolyphenyDbInstance polyphenyDbInstance ) {
             // Set workload monitoring
-            ((PolyphenyDbInstance) databaseInstance).setWorkloadMonitoring( config.workloadMonitoringLoadingData );
+            polyphenyDbInstance.setWorkloadMonitoring( config.workloadMonitoringLoadingData );
 
             // Start Polypheny status data gathering
             if ( PolyphenyVersionSwitch.getInstance().hasStatusEndpoint ) {
-                ((PolyphenyDbInstance) databaseInstance).getStatusGatherer().startStatusDataGathering( 60 );
+                polyphenyDbInstance.getStatusGatherer().startStatusDataGathering( 60 );
             }
         }
 
@@ -374,8 +382,8 @@ public class ChronosAgent extends AbstractChronosAgent {
             throw e;
         }
 
-        if ( databaseInstance instanceof PolyphenyDbInstance && config.restartAfterLoadingData ) {
-            ((PolyphenyDbInstance) databaseInstance).restartPolypheny();
+        if ( databaseInstance instanceof PolyphenyDbInstance polyphenyDbInstance && config.restartAfterLoadingData ) {
+            polyphenyDbInstance.restartPolypheny();
         }
 
         return new ImmutableTriple<>( scenario, config, databaseInstance );
@@ -391,18 +399,18 @@ public class ChronosAgent extends AbstractChronosAgent {
         @SuppressWarnings("unchecked")
         DatabaseInstance databaseInstance = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getRight();
         try {
-            if ( databaseInstance instanceof PolyphenyDbInstance ) {
+            if ( databaseInstance instanceof PolyphenyDbInstance polyphenyDbInstance ) {
                 // Set workload monitoring
-                ((PolyphenyDbInstance) databaseInstance).setWorkloadMonitoring( config.workloadMonitoringWarmup );
+                polyphenyDbInstance.setWorkloadMonitoring( config.workloadMonitoringWarmup );
 
                 // Enable icarus training -- to be removed
                 if ( config.router != null && config.router.equals( "icarus" ) && PolyphenyVersionSwitch.getInstance().hasIcarusRoutingSettings ) {
-                    ((PolyphenyDbInstance) databaseInstance).setIcarusRoutingTraining( true );
+                    polyphenyDbInstance.setIcarusRoutingTraining( true );
                 }
 
                 // Enable Post Cost Aggregation
                 if ( config.postCostAggregation.equals( "onWarmup" ) && !PolyphenyVersionSwitch.getInstance().hasIcarusRoutingSettings ) {
-                    ((PolyphenyDbInstance) databaseInstance).setPostCostAggregation( true );
+                    polyphenyDbInstance.setPostCostAggregation( true );
                 }
 
                 // Wait a moment to give Polypheny-DB the chance to process all data points from data insertion
@@ -420,7 +428,7 @@ public class ChronosAgent extends AbstractChronosAgent {
                     config.progressReportBase );
             scenario.warmUp( progressReporter );
 
-            if ( databaseInstance instanceof PolyphenyDbInstance ) {
+            if ( databaseInstance instanceof PolyphenyDbInstance polyphenyDbInstance ) {
                 // Wait a moment to give Polypheny-DB the chance to process all data points from warmup
                 try {
                     TimeUnit.MINUTES.sleep( 1 );
@@ -430,13 +438,18 @@ public class ChronosAgent extends AbstractChronosAgent {
 
                 // Disable Post Cost Aggregation
                 if ( config.postCostAggregation.equals( "onWarmup" ) && !PolyphenyVersionSwitch.getInstance().hasIcarusRoutingSettings ) {
-                    ((PolyphenyDbInstance) databaseInstance).setPostCostAggregation( false );
+                    polyphenyDbInstance.setPostCostAggregation( false );
                 }
 
                 // Disable icarus training  -- to be removed
                 if ( config.router != null && config.router.equals( "icarus" ) && PolyphenyVersionSwitch.getInstance().hasIcarusRoutingSettings ) {
-                    ((PolyphenyDbInstance) databaseInstance).setIcarusRoutingTraining( false );
+                    polyphenyDbInstance.setIcarusRoutingTraining( false );
                 }
+                PolyphenyFullStatus status = polyphenyDbInstance.getStatusGatherer().gatherFullOnce();
+                properties.put( "pdbStatus_implementationCacheSize_after_warmup", status.implementationCacheSize() );
+                properties.put( "pdbStatus_queryPlanCacheSize_after_warmup", status.queryPlanCacheSize() );
+                properties.put( "pdbStatus_routingPlanCacheSize_after_warmup", status.routingPlanCacheSize() );
+                properties.put( "pdbStatus_monitoringQueueSize_after_warmup", status.monitoringQueueSize() );
             }
         } catch ( Exception e ) {
             databaseInstance.tearDown();
@@ -463,8 +476,8 @@ public class ChronosAgent extends AbstractChronosAgent {
         }
 
         // Set workload monitoring
-        if ( databaseInstance instanceof PolyphenyDbInstance ) {
-            ((PolyphenyDbInstance) databaseInstance).setWorkloadMonitoring( config.workloadMonitoringExecutingWorkload );
+        if ( databaseInstance instanceof PolyphenyDbInstance polyphenyDbInstance ) {
+            polyphenyDbInstance.setWorkloadMonitoring( config.workloadMonitoringExecutingWorkload );
         }
 
         int numberOfThreads = config.numberOfThreads;
@@ -506,8 +519,8 @@ public class ChronosAgent extends AbstractChronosAgent {
             throw e;
         }
 
-        if ( databaseInstance instanceof PolyphenyDbInstance && PolyphenyVersionSwitch.getInstance().hasStatusEndpoint ) {
-            StatusGatherer statusGatherer = ((PolyphenyDbInstance) databaseInstance).getStatusGatherer();
+        if ( databaseInstance instanceof PolyphenyDbInstance polyphenyDbInstance && PolyphenyVersionSwitch.getInstance().hasStatusEndpoint ) {
+            StatusGatherer statusGatherer = polyphenyDbInstance.getStatusGatherer();
 
             // Stop gathering
             List<PolyphenyStatus> statuses = statusGatherer.stopGathering();
@@ -517,9 +530,9 @@ public class ChronosAgent extends AbstractChronosAgent {
             List<Integer> numOfActiveTrxReadings = new ArrayList<>( statuses.size() );
             List<Integer> monitoringQueueSizeReadings = new ArrayList<>( statuses.size() );
             for ( PolyphenyStatus status : statuses ) {
-                currentMemoryReadings.add( status.getCurrentMemory() );
-                numOfActiveTrxReadings.add( status.getNumOfActiveTrx() );
-                monitoringQueueSizeReadings.add( status.getMonitoringQueueSize() );
+                currentMemoryReadings.add( status.currentMemory() );
+                numOfActiveTrxReadings.add( status.numOfActiveTrx() );
+                monitoringQueueSizeReadings.add( status.monitoringQueueSize() );
             }
             properties.put( "pdbStatus_currentMemory", currentMemoryReadings );
             properties.put( "pdbStatus_numOfActiveTrx", numOfActiveTrxReadings );
@@ -535,16 +548,16 @@ public class ChronosAgent extends AbstractChronosAgent {
             // Do a final gathering
             try {
                 PolyphenyFullStatus status = statusGatherer.gatherFullOnce();
-                properties.put( "pdbStatus_uuid", status.getUuid() );
-                properties.put( "pdbStatus_version", status.getVersion() );
-                properties.put( "pdbStatus_hash", status.getHash() );
-                properties.put( "pdbStatus_currentMemory_final", status.getCurrentMemory() );
-                properties.put( "pdbStatus_numOfActiveTrx_final", status.getNumOfActiveTrx() );
-                properties.put( "pdbStatus_trxCount_final", status.getTrxCount() );
-                properties.put( "pdbStatus_implementationCacheSize_final", status.getImplementationCacheSize() );
-                properties.put( "pdbStatus_queryPlanCacheSize_final", status.getQueryPlanCacheSize() );
-                properties.put( "pdbStatus_routingPlanCacheSize_final", status.getRoutingPlanCacheSize() );
-                properties.put( "pdbStatus_monitoringQueueSize_final", status.getMonitoringQueueSize() );
+                properties.put( "pdbStatus_uuid", status.uui() );
+                properties.put( "pdbStatus_version", status.version() );
+                properties.put( "pdbStatus_hash", status.hash() );
+                properties.put( "pdbStatus_currentMemory_final", status.currentMemory() );
+                properties.put( "pdbStatus_numOfActiveTrx_final", status.numOfActiveTrx() );
+                properties.put( "pdbStatus_trxCount_final", status.trxCount() );
+                properties.put( "pdbStatus_implementationCacheSize_final", status.implementationCacheSize() );
+                properties.put( "pdbStatus_queryPlanCacheSize_final", status.queryPlanCacheSize() );
+                properties.put( "pdbStatus_routingPlanCacheSize_final", status.routingPlanCacheSize() );
+                properties.put( "pdbStatus_monitoringQueueSize_final", status.monitoringQueueSize() );
             } catch ( Exception e ) {
                 log.error( "Unable to gather final status data from Polypheny", e );
             }
@@ -564,6 +577,9 @@ public class ChronosAgent extends AbstractChronosAgent {
         DatabaseInstance databaseInstance = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getRight();
 
         databaseInstance.tearDown();
+        if ( dockerContainerName != null ) {
+            DockerLauncher.remove( dockerContainerName );
+        }
         return null;
     }
 

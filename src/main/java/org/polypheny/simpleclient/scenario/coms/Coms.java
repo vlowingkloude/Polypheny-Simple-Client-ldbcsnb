@@ -33,13 +33,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Properties;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import lombok.AllArgsConstructor;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.cli.Mode;
@@ -55,11 +53,11 @@ import org.polypheny.simpleclient.main.ProgressReporter.ReportMultiQueryListProg
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryListEntry;
 import org.polypheny.simpleclient.scenario.EvaluationThread;
-import org.polypheny.simpleclient.scenario.Scenario;
-import org.polypheny.simpleclient.scenario.graph.GraphBench.EvaluationThreadMonitor;
+import org.polypheny.simpleclient.scenario.EvaluationThreadMonitor;
+import org.polypheny.simpleclient.scenario.PolyphenyScenario;
 
 @Slf4j
-public class Coms extends Scenario {
+public class Coms extends PolyphenyScenario {
 
     public static final String NAMESPACE = "coms";
     public static final double EPSILON = 0.000001;
@@ -243,7 +241,7 @@ public class Coms extends Scenario {
 
 
     @SafeVarargs
-    private final void startEvaluation( ProgressReporter progressReporter, CsvWriter csvWriter, int numberOfThreads, List<Integer> threadDistribution, List<QueryListEntry>... queryLists ) {
+    private void startEvaluation( ProgressReporter progressReporter, CsvWriter csvWriter, int numberOfThreads, List<Integer> threadDistribution, List<QueryListEntry>... queryLists ) {
         log.info( "Executing benchmark..." );
         if ( threadDistribution.size() != queryLists.length ) {
             throw new RuntimeException( "ThreadDistribution needs to define an number for each data model" );
@@ -279,7 +277,7 @@ public class Coms extends Scenario {
 
         ArrayList<EvaluationThread> threads = new ArrayList<>();
         for ( List<QueryListEntry> queryList : organized ) {
-            threads.add( new EvaluationThread( queryList, executorFactory.createExecutorInstance( csvWriter, NAMESPACE ), queryTypes.keySet(), commitAfterEveryQuery ) );
+            threads.add( new EvaluationThread( new ConcurrentLinkedQueue<>( queryList ), executorFactory.createExecutorInstance( csvWriter, NAMESPACE ), queryTypes.keySet(), commitAfterEveryQuery ) );
         }
 
         EvaluationThreadMonitor threadMonitor = new EvaluationThreadMonitor( threads );
@@ -325,7 +323,7 @@ public class Coms extends Scenario {
 
 
     @SafeVarargs
-    private final List<QueryListEntry> randomlyMergeInOrder( final List<QueryListEntry>... lists ) {
+    private List<QueryListEntry> randomlyMergeInOrder( final List<QueryListEntry>... lists ) {
         List<QueryListEntry> merged = new ArrayList<>();
 
         List<List<QueryListEntry>> bucket = new ArrayList<>( Arrays.asList( lists ) );
@@ -399,33 +397,12 @@ public class Coms extends Scenario {
 
 
     @Override
-    public void analyze( Properties properties, File outputDirectory ) {
-        properties.put( "measuredTime", calculateMean( measuredTimes ) );
-
-        measuredTimePerQueryType.forEach( ( templateId, time ) -> {
-            calculateResults( queryTypes, properties, templateId, time );
-        } );
-        properties.put( "queryTypes_maxId", queryTypes.size() );
-        properties.put( "executeRuntime", executeRuntime / 1000000000.0 );
-        properties.put( "numberOfQueries", measuredTimes.size() );
-        properties.put( "throughput", measuredTimes.size() / (executeRuntime / 1000000000.0) );
-    }
-
-
-    @Override
     public int getNumberOfInsertThreads() {
         return 0;
     }
 
 
-    @Value
-    @AllArgsConstructor
-    public static class PolyphenyAdapters {
-
-        String relAdapter;
-        String docAdapter;
-        String graphAdapter;
-
+    public record PolyphenyAdapters( String relAdapter, String docAdapter, String graphAdapter ) {
 
         public boolean isSet() {
             return relAdapter != null || docAdapter != null || graphAdapter != null;

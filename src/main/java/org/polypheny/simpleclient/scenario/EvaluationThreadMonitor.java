@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-2021 The Polypheny Project
+ * Copyright (c) 2019-2025 The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -22,28 +22,35 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.query;
+package org.polypheny.simpleclient.scenario;
 
-
-import java.util.Collections;
 import java.util.List;
+import lombok.Getter;
 
-public class QueryListEntry {
+public final class EvaluationThreadMonitor {
 
-    public final Query query;
-    public final int templateId;
-    public final List<Integer> templateIds;
+    private final List<EvaluationThread> threads;
+    @Getter
+    private Exception exception;
+    @Getter
+    private boolean aborted;
 
 
-    public QueryListEntry( Query query, int templateId ) {
-        this( query, Collections.singletonList( templateId ) );
+    public EvaluationThreadMonitor( List<EvaluationThread> threads ) {
+        this.threads = threads;
+        this.aborted = false;
     }
 
 
-    public QueryListEntry( Query query, List<Integer> templateIds ) {
-        this.query = query;
-        this.templateId = templateIds.getFirst();
-        this.templateIds = templateIds;
+    public void abortAll() {
+        this.aborted = true;
+        threads.forEach( EvaluationThread::abort );
+    }
+
+
+    public void notifyAboutError( Exception e ) {
+        exception = e;
+        abortAll();
     }
 
 }
