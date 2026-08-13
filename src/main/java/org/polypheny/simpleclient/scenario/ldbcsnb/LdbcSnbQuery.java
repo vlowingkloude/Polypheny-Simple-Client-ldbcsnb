@@ -26,8 +26,9 @@ package org.polypheny.simpleclient.scenario.ldbcsnb;
 
 import org.polypheny.simpleclient.query.QueryBuilder;
 
+import java.io.IOException;
 import java.io.InputStream;
-import java.util.Scanner;
+import java.nio.charset.StandardCharsets;
 import org.polypheny.simpleclient.query.Query;
 
 public abstract class LdbcSnbQuery extends QueryBuilder {
@@ -35,11 +36,16 @@ public abstract class LdbcSnbQuery extends QueryBuilder {
     protected int id = -1;
     protected final String cypher;
 
-    public LdbcSnbQuery(String cypherFile) {
-        InputStream is = ClassLoader.getSystemResourceAsStream("org/polypheny/simpleclient/scenario/ldbcsnb/" + cypherFile);
-        assert is != null;
-        Scanner scanner = new Scanner(is).useDelimiter("\\A");
-        this.cypher = scanner.hasNext() ? scanner.next() : "";
+    public LdbcSnbQuery( String cypherFile ) {
+        String resource = "org/polypheny/simpleclient/scenario/ldbcsnb/" + cypherFile;
+        try (InputStream input = ClassLoader.getSystemResourceAsStream( resource )) {
+            if ( input == null ) {
+                throw new IllegalArgumentException( "Missing LDBC query resource: " + resource );
+            }
+            this.cypher = new String( input.readAllBytes(), StandardCharsets.UTF_8 );
+        } catch ( IOException e ) {
+            throw new IllegalStateException( "Failed to read LDBC query resource: " + resource, e );
+        }
     }
 
     // used for warmup

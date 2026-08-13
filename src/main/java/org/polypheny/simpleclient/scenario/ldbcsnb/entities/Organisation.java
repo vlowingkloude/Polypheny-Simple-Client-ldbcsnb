@@ -31,19 +31,18 @@ import java.util.List;
 public class Organisation extends NodeEntity {
 
     @Override
-    public String getPath(String pathPrefix, int scaleFactor) {
-        return pathPrefix + String.format("/bi-sf%d-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/static/Organisation/", scaleFactor);
+    public String getPath(String pathPrefix, String scaleFactor) {
+        return pathPrefix + String.format("/bi-sf%s-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/static/Organisation/", scaleFactor);
     }
 
     @Override
     public String getQuery(List<String> row) {
-        String baseQuery = "CREATE (organisation_%s:Organisation:%s {id: %s, name: \"%s\", url: \"%s\"})";
-        return String.format(baseQuery, row.get(0), row.get(1), row.get(0), row.get(2), row.get(3));
+        return "CREATE " + getBatchQuery( row );
     }
 
     @Override
     public String getBatchQuery(List<String> row) {
-        String baseQuery = "(organisation_%s:Organisation:%s {id: %s, name: \"%s\", url: \"%s\"})";
-        return String.format(baseQuery, row.get(0), row.get(1), row.get(0), row.get(2), row.get(3));
+        String baseQuery = "(organisation_%s:Organisation:%s {id: %s.0, name: %s, url: %s})";
+        return String.format( baseQuery, row.get( 0 ), canonicalLabel( row.get( 1 ) ), row.get( 0 ), quote( row.get( 2 ) ), quote( row.get( 3 ) ) );
     }
 }

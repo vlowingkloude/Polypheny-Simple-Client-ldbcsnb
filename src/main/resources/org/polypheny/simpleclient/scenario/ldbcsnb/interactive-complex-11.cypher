@@ -19,6 +19,6 @@ RETURN
         workAt.workFrom AS organizationWorkFromYear
 ORDER BY
         organizationWorkFromYear ASC,
-        toInteger(personId) ASC,
+        personId ASC,
         organizationName DESC
 LIMIT 10

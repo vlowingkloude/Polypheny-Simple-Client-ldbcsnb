@@ -31,22 +31,22 @@ import java.util.Map;
 
 public class CommentIsLocatedInCountry extends EdgeEntity {
     @Override
-    public String getPath(String pathPrefix, int scaleFactor) {
-        return pathPrefix + String.format("/bi-sf%d-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/dynamic/Comment_isLocatedIn_Country/", scaleFactor);
+    public String getPath(String pathPrefix, String scaleFactor) {
+        return pathPrefix + String.format("/bi-sf%s-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/dynamic/Comment_isLocatedIn_Country/", scaleFactor);
     }
 
     @Override
     public String getQuery(List<String> row) {
         // TODO: shall we use Country label here?
-        String baseQuery = "MATCH (comment_%s:Comment {id: %s}), (place_%s:Place {id: %s}) CREATE (comment_%s)-[:IS_LOCATED_IN {creationDate: DATETIME(\"%s\")}]->(place_%s)";
-        return String.format(baseQuery, row.get(1), row.get(1), row.get(2), row.get(2), row.get(1), row.get(0), row.get(2));
+        String baseQuery = "MATCH (comment_%s:Comment {id: %s.0}), (place_%s:Place {id: %s.0}) CREATE (comment_%s)-[:IS_LOCATED_IN {creationDate: %s}]->(place_%s)";
+        return String.format(baseQuery, row.get(1), row.get(1), row.get(2), row.get(2), row.get(1), toEpochMillis(row.get(0)), row.get(2));
     }
 
     @Override
     public Map.Entry<String, String> getBatchQuery(List<String> row) {
-        String matchClause = "(comment_%s:Comment {id: %s}), (place_%s:Place {id: %s})";
-        String createClause = "(comment_%s)-[:IS_LOCATED_IN {creationDate: DATETIME(\"%s\")}]->(place_%s)";
+        String matchClause = "(comment_%s:Comment {id: %s.0}), (place_%s:Place {id: %s.0})";
+        String createClause = "(comment_%s)-[:IS_LOCATED_IN {creationDate: %s}]->(place_%s)";
         return Map.entry(String.format(matchClause, row.get(1), row.get(1), row.get(2), row.get(2)),
-                String.format(createClause, row.get(1), row.get(0), row.get(2)));
+                String.format(createClause, row.get(1), toEpochMillis(row.get(0)), row.get(2)));
     }
 }

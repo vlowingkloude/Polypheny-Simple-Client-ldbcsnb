@@ -42,14 +42,19 @@ public class PolyphenyVersionSwitch {
 
 
     public static void initialize( AbstractConfig config ) {
-        instance = new PolyphenyVersionSwitch( config );
+        instance = new PolyphenyVersionSwitch( config.pdbBranch );
     }
 
 
-    private PolyphenyVersionSwitch( AbstractConfig config ) {
+    public static void initializeDefaults() {
+        instance = new PolyphenyVersionSwitch( "master" );
+    }
+
+
+    private PolyphenyVersionSwitch( String pdbBranch ) {
         uiPort = 7659;
         hasStatusEndpoint = true;
-        hasIcarusRoutingSettings = config.pdbBranch.equalsIgnoreCase( "old-routing" );
+        hasIcarusRoutingSettings = pdbBranch.equalsIgnoreCase( "old-routing" );
         useNewDeploySyntax = !hasIcarusRoutingSettings;
         useNewAdapterDeployParameters = true;
         usePrismJdbcDriver = true;

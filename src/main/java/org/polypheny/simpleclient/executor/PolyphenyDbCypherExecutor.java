@@ -51,6 +51,12 @@ public class PolyphenyDbCypherExecutor extends PolyphenyDbHttpExecutor {
     }
 
 
+    public PolyphenyDbCypherExecutor( String host, int port, CsvWriter csvWriter, String namespace ) {
+        super( "Cypher", Query::getCypher, host, port, csvWriter );
+        this.namespace = namespace;
+    }
+
+
     @Override
     protected HttpRequest<?> buildQuery( String query, String namespace ) {
         JsonObject data = new JsonObject();
@@ -100,10 +106,17 @@ public class PolyphenyDbCypherExecutor extends PolyphenyDbHttpExecutor {
     public static class PolyphenyDbCypherExecutorFactory extends ExecutorFactory {
 
         private final String host;
+        private final int port;
 
 
         public PolyphenyDbCypherExecutorFactory( String host ) {
+            this( host, 13137 );
+        }
+
+
+        public PolyphenyDbCypherExecutorFactory( String host, int port ) {
             this.host = host;
+            this.port = port;
         }
 
 
@@ -115,7 +128,7 @@ public class PolyphenyDbCypherExecutor extends PolyphenyDbHttpExecutor {
 
         @Override
         public PolyphenyDbCypherExecutor createExecutorInstance( CsvWriter csvWriter, String namespace ) {
-            return new PolyphenyDbCypherExecutor( host, csvWriter, namespace );
+            return new PolyphenyDbCypherExecutor( host, port, csvWriter, namespace );
         }
 
 

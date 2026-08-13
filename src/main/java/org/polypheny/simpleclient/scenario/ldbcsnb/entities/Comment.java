@@ -30,20 +30,20 @@ import java.util.List;
 
 public class Comment extends NodeEntity {
     @Override
-    public String getPath(String pathPrefix, int scaleFactor) {
-        return pathPrefix + String.format("/bi-sf%d-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/dynamic/Comment/", scaleFactor);
+    public String getPath(String pathPrefix, String scaleFactor) {
+        return pathPrefix + String.format("/bi-sf%s-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/dynamic/Comment/", scaleFactor);
     }
 
     @Override
     public String getQuery(List<String> row) {
-        // TODO: shall we use message_id here? OR use Comment_id?
-        String baseQuery = "CREATE (comment_%s:Message:Comment {creationDate: DATETIME(\"%s\"), id: %s, locationIP: \"%s\", browserUsed: \"%s\", content: \"%s\", length: %s})";
-        return String.format(baseQuery, row.get(1), row.get(0), row.get(1), row.get(2), row.get(3), row.get(4), row.get(5));
+        return "CREATE " + getBatchQuery( row );
     }
 
     @Override
     public String getBatchQuery(List<String> row) {
-        String baseQuery = "(comment_%s:Message:Comment {creationDate: DATETIME(\"%s\"), id: %s, locationIP: \"%s\", browserUsed: \"%s\", content: \"%s\", length: %s})";
-        return String.format(baseQuery, row.get(1), row.get(0), row.get(1), row.get(2), row.get(3), row.get(4), row.get(5));
+        String baseQuery = "(comment_%s:Message:Comment {creationDate: %s, id: %s.0, locationIP: %s, browserUsed: %s, content: %s, length: %s})";
+        return String.format( baseQuery,
+                row.get( 1 ), toEpochMillis( row.get( 0 ) ), row.get( 1 ), quote( row.get( 2 ) ),
+                quote( row.get( 3 ) ), quote( row.get( 4 ) ), row.get( 5 ) );
     }
 }

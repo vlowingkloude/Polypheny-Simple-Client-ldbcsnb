@@ -10,7 +10,7 @@ MATCH (p:Person {id: $personId}), (friend:Person {firstName: $firstName})
 ORDER BY
     distance ASC,
     friend.lastName ASC,
-    toInteger(friend.id) ASC
+    friend.id ASC
 LIMIT 20
 
 MATCH (friend)-[:IS_LOCATED_IN]->(friendCity:City)
@@ -45,5 +45,5 @@ RETURN
 ORDER BY
     distanceFromPerson ASC,
     friendLastName ASC,
-    toInteger(friendId) ASC
+    friendId ASC
 LIMIT 20

@@ -42,6 +42,6 @@ public class InteractiveComplex9 extends LdbcSnbQuery {
     }
     // used for warmup
     public Query getDefaultQuery() {
-        return new GraphQuery( cypher.replace("$personId",  "4398046511268").replace("$maxDate", "1289908800000") );
+        return new GraphQuery( cypher.replace("$personId",  "4398046511268.0").replace("$maxDate", "1289908800000.0") );
     }
 }

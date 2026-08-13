@@ -43,6 +43,6 @@ public class InteractiveComplex14 extends LdbcSnbQuery {
 
     // used for warmup
     public Query getDefaultQuery() {
-        return new GraphQuery( cypher.replace("$person1Id",  "14").replace("$person2Id", "27") );
+        return new GraphQuery( cypher.replace("$person1Id",  "14.0").replace("$person2Id", "27.0") );
     }
 }

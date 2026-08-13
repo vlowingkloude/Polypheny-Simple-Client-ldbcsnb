@@ -34,6 +34,7 @@ import kong.unirest.core.JsonNode;
 import kong.unirest.core.Unirest;
 import kong.unirest.core.UnirestException;
 import kong.unirest.core.json.JSONArray;
+import kong.unirest.core.json.JSONObject;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
@@ -57,11 +58,20 @@ public abstract class PolyphenyDbHttpExecutor implements PolyphenyDbExecutor {
 
     protected final PolyphenyDbJdbcExecutorFactory jdbcExecutorFactory;
     protected final CsvWriter csvWriter;
+    protected final String host;
+    protected final int port;
 
 
     public PolyphenyDbHttpExecutor( String name, Function<Query, String> queryAccessor, String host, CsvWriter csvWriter ) {
+        this( name, queryAccessor, host, 13137, csvWriter );
+    }
+
+
+    public PolyphenyDbHttpExecutor( String name, Function<Query, String> queryAccessor, String host, int port, CsvWriter csvWriter ) {
         this.name = name;
         this.queryAccessor = queryAccessor;
+        this.host = host;
+        this.port = port;
         this.jdbcExecutorFactory = new PolyphenyDbJdbcExecutorFactory( host, false );
         this.csvWriter = csvWriter;
     }
@@ -161,10 +171,11 @@ public abstract class PolyphenyDbHttpExecutor implements PolyphenyDbExecutor {
         HttpRequest<?> request = getRequest( queryAccessor.apply( query ), namespace );
         try {
             long start = System.nanoTime();
-            @SuppressWarnings("rawtypes") HttpResponse result = request.asBytes();
+            HttpResponse<JsonNode> result = request.asJson();
             if ( !result.isSuccess() ) {
                 throw new ExecutorException( "Error while executing " + name + " query. Message: " + result.getStatusText() + "  |  URL: " + request.getUrl() );
             }
+            validateResponse( result.getBody() );
             time = System.nanoTime() - start;
             if ( csvWriter != null ) {
                 csvWriter.appendToCsv( queryAccessor.apply( query ), time );
@@ -192,8 +203,8 @@ public abstract class PolyphenyDbHttpExecutor implements PolyphenyDbExecutor {
         HttpRequest<?> request = buildQuery( query, namespace );
         request.basicAuth( "pa", "" );
         request.routeParam( "protocol", "http" );
-        request.routeParam( "host", "127.0.0.1" );
-        request.routeParam( "port", "13137" );
+        request.routeParam( "host", host );
+        request.routeParam( "port", Integer.toString( port ) );
         return request;
     }
 
@@ -213,11 +224,15 @@ public abstract class PolyphenyDbHttpExecutor implements PolyphenyDbExecutor {
             if ( !result.isSuccess() ) {
                 throw new ExecutorException( "Error while executing " + name + " query. Message: " + result.getStatusText() + "  |  URL: " + request.getUrl() );
             }
+            JSONArray responseItems = validateResponse( result.getBody() );
             if ( csvWriter != null ) {
                 csvWriter.appendToCsv( request.getUrl(), System.nanoTime() - start );
             }
             // Get result of a count query
-            JSONArray res = result.getBody().getObject().getJSONArray( "data" );
+            if ( responseItems.length() != 1 ) {
+                throw new ExecutorException( "Invalid count-query response: expected one result, got " + responseItems.length() );
+            }
+            JSONArray res = responseItems.getJSONObject( 0 ).getJSONArray( "data" );
             if ( res.length() != 1 ) {
                 throw new ExecutorException( "Invalid result: " + res );
             }
@@ -226,6 +241,32 @@ public abstract class PolyphenyDbHttpExecutor implements PolyphenyDbExecutor {
         } catch ( UnirestException e ) {
             throw new ExecutorException( e );
         }
+    }
+
+
+    private JSONArray validateResponse( JsonNode body ) throws ExecutorException {
+        if ( body == null ) {
+            throw new ExecutorException( "Empty response while executing " + name + " query" );
+        }
+
+        JSONArray responseItems;
+        if ( body.isArray() ) {
+            responseItems = body.getArray();
+        } else {
+            responseItems = new JSONArray().put( body.getObject() );
+        }
+        if ( responseItems.isEmpty() ) {
+            throw new ExecutorException( "Empty response while executing " + name + " query" );
+        }
+
+        for ( int i = 0; i < responseItems.length(); i++ ) {
+            JSONObject item = responseItems.getJSONObject( i );
+            String error = item.optString( "error", "" );
+            if ( !error.isBlank() || item.has( "exception" ) ) {
+                throw new ExecutorException( "Polypheny rejected " + name + " query: " + (error.isBlank() ? "unknown server error" : error) );
+            }
+        }
+        return responseItems;
     }
 
 }

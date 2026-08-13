@@ -30,19 +30,21 @@ import java.util.List;
 
 public class Post extends NodeEntity {
     @Override
-    public String getPath(String pathPrefix, int scaleFactor) {
-        return pathPrefix + String.format("/bi-sf%d-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/dynamic/Post/", scaleFactor);
+    public String getPath(String pathPrefix, String scaleFactor) {
+        return pathPrefix + String.format("/bi-sf%s-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/dynamic/Post/", scaleFactor);
     }
 
     @Override
     public String getQuery(List<String> row) {
-        String baseQuery = "CREATE (post_%s:Message:Post {creationDate: DATETIME(\"%s\"), id: %s, imageFile: \"%s\", locationIP: \"%s\", browserUsed: \"%s\", language: \"%s\", content: \"%s\", length: %s})";
-        return String.format(baseQuery, row.get(1), row.get(0), row.get(1), row.get(2), row.get(3), row.get(4), row.get(5), row.get(6), row.get(7));
+        return "CREATE " + getBatchQuery( row );
     }
 
     @Override
     public String getBatchQuery(List<String> row) {
-        String baseQuery = "(post_%s:Message:Post {creationDate: DATETIME(\"%s\"), id: %s, imageFile: \"%s\", locationIP: \"%s\", browserUsed: \"%s\", language: \"%s\", content: \"%s\", length: %s})";
-        return String.format(baseQuery, row.get(1), row.get(0), row.get(1), row.get(2), row.get(3), row.get(4), row.get(5), row.get(6), row.get(7));
+        String baseQuery = "(post_%s:Message:Post {creationDate: %s, id: %s.0, imageFile: %s, locationIP: %s, browserUsed: %s, language: %s, content: %s, length: %s})";
+        return String.format( baseQuery,
+                row.get( 1 ), toEpochMillis( row.get( 0 ) ), row.get( 1 ), quote( row.get( 2 ) ),
+                quote( row.get( 3 ) ), quote( row.get( 4 ) ), quote( row.get( 5 ) ),
+                quote( row.get( 6 ) ), row.get( 7 ) );
     }
 }

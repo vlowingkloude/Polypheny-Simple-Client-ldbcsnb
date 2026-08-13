@@ -30,19 +30,29 @@ import java.util.List;
 
 public class Person extends NodeEntity {
     @Override
-    public String getPath(String pathPrefix, int scaleFactor) {
-        return pathPrefix + String.format("/bi-sf%d-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/dynamic/Person/", scaleFactor);
+    public String getPath(String pathPrefix, String scaleFactor) {
+        return pathPrefix + String.format("/bi-sf%s-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/dynamic/Person/", scaleFactor);
     }
 
     @Override
     public String getQuery(List<String> row) {
-        String baseQuery = "CREATE (person_%s:Person {creationDate: DATETIME(\"%s\"), id: %s, firstName: \"%s\", lastName: \"%s\", gender: \"%s\", birthday: \"%s\", locationIP: \"%s\", browserUsed: \"%s\", language: \"%s\", email: \"%s\"})";
-        return String.format(baseQuery, row.get(1), row.get(0), row.get(1), row.get(2), row.get(3), row.get(4), row.get(5), row.get(6), row.get(7), row.get(8), row.get(9));
+        return "CREATE " + getBatchQuery( row );
     }
 
     @Override
     public String getBatchQuery(List<String> row) {
-        String baseQuery = "(person_%s:Person {creationDate: DATETIME(\"%s\"), id: %s, firstName: \"%s\", lastName: \"%s\", gender: \"%s\", birthday: \"%s\", locationIP: \"%s\", browserUsed: \"%s\", language: \"%s\", email: \"%s\"})";
-        return String.format(baseQuery, row.get(1), row.get(0), row.get(1), row.get(2), row.get(3), row.get(4), row.get(5), row.get(6), row.get(7), row.get(8), row.get(9));
+        String baseQuery = "(person_%s:Person {creationDate: %s, id: %s.0, firstName: %s, lastName: %s, gender: %s, birthday: %s, locationIP: %s, browserUsed: %s, speaks: %s, email: %s})";
+        return String.format( baseQuery,
+                row.get( 1 ),
+                toEpochMillis( row.get( 0 ) ),
+                row.get( 1 ),
+                quote( row.get( 2 ) ),
+                quote( row.get( 3 ) ),
+                quote( row.get( 4 ) ),
+                toEpochMillis( row.get( 5 ) ),
+                quote( row.get( 6 ) ),
+                quote( row.get( 7 ) ),
+                stringList( row.get( 8 ) ),
+                stringList( row.get( 9 ) ) );
     }
 }

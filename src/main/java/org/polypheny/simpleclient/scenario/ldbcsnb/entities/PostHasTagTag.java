@@ -31,21 +31,21 @@ import java.util.Map;
 
 public class PostHasTagTag extends EdgeEntity {
     @Override
-    public String getPath(String pathPrefix, int scaleFactor) {
-        return pathPrefix + String.format("/bi-sf%d-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/dynamic/Comment_hasTag_Tag/", scaleFactor);
+    public String getPath(String pathPrefix, String scaleFactor) {
+        return pathPrefix + String.format("/bi-sf%s-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/dynamic/Comment_hasTag_Tag/", scaleFactor);
     }
 
     @Override
     public String getQuery(List<String> row) {
-        String baseQuery = "MATCH (post_%s:Post {id: %s}), (tag_%s:Tag {id: %s}) CREATE (post_%s)-[:HAS_TAG {creationDate: DATETIME(\"%s\")}]->(tag_%s)";
-        return String.format(baseQuery, row.get(1), row.get(1), row.get(2), row.get(2), row.get(1), row.get(0), row.get(2));
+        String baseQuery = "MATCH (post_%s:Post {id: %s.0}), (tag_%s:Tag {id: %s.0}) CREATE (post_%s)-[:HAS_TAG {creationDate: %s}]->(tag_%s)";
+        return String.format(baseQuery, row.get(1), row.get(1), row.get(2), row.get(2), row.get(1), toEpochMillis(row.get(0)), row.get(2));
     }
 
     @Override
     public Map.Entry<String, String> getBatchQuery(List<String> row) {
-        String matchClause = "(post_%s:Post {id: %s}), (tag_%s:Tag {id: %s})";
-        String createClause = "(post_%s)-[:HAS_TAG {creationDate: DATETIME(\"%s\")}]->(tag_%s)";
+        String matchClause = "(post_%s:Post {id: %s.0}), (tag_%s:Tag {id: %s.0})";
+        String createClause = "(post_%s)-[:HAS_TAG {creationDate: %s}]->(tag_%s)";
         return Map.entry(String.format(matchClause, row.get(1), row.get(1), row.get(2), row.get(2)),
-                String.format(createClause, row.get(1), row.get(0), row.get(2)));
+                String.format(createClause, row.get(1), toEpochMillis(row.get(0)), row.get(2)));
     }
 }

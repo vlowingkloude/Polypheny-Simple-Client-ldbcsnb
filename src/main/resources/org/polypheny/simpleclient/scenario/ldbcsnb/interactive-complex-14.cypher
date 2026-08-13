@@ -19,7 +19,7 @@ CALL gds.graph.project.cypher(
   'MATCH (p:Person) RETURN id(p) AS id',
   'MATCH
       (pA:Person)-[knows:KNOWS]-(pB:Person),
-      (pA)<-[:HAS_CREATOR]-(m1:Message)-[r:REPLY_OF]-(m2:Message)-[:HAS_CREATOR]->(pB)
+      (pA)<-[:HAS_CREATOR]-(m1)-[r:REPLY_OF]-(m2)-[:HAS_CREATOR]->(pB)
     WITH
       id(pA) AS source,
       id(pB) AS target,

@@ -31,19 +31,19 @@ import java.util.Map;
 
 public class OrganisationIsLocatedInPlace extends EdgeEntity {
     @Override
-    public String getPath(String pathPrefix, int scaleFactor) {
-        return pathPrefix + String.format("/bi-sf%d-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/static/Organisation_isLocatedIn_Place/", scaleFactor);
+    public String getPath(String pathPrefix, String scaleFactor) {
+        return pathPrefix + String.format("/bi-sf%s-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/static/Organisation_isLocatedIn_Place/", scaleFactor);
     }
 
     @Override
     public String getQuery(List<String> row) {
-        String baseQuery = "MATCH (organisation_%s:Organisation {id: %s}), (place_%s:Place {id: %s}) CREATE (organisation_%s)-[:IS_LOCATED_IN]->(place_%s)";
+        String baseQuery = "MATCH (organisation_%s:Organisation {id: %s.0}), (place_%s:Place {id: %s.0}) CREATE (organisation_%s)-[:IS_LOCATED_IN]->(place_%s)";
         return String.format(baseQuery, row.get(0), row.get(0), row.get(1), row.get(1), row.get(0), row.get(1));
     }
 
     @Override
     public Map.Entry<String, String> getBatchQuery(List<String> row) {
-        String matchClause = "(organisation_%s:Organisation {id: %s}), (place_%s:Place {id: %s})";
+        String matchClause = "(organisation_%s:Organisation {id: %s.0}), (place_%s:Place {id: %s.0})";
         String createClause = "(organisation_%s)-[:IS_LOCATED_IN]->(place_%s)";
         return Map.entry(String.format(matchClause, row.get(0), row.get(0), row.get(1), row.get(1)),
                 String.format(createClause, row.get(0), row.get(1)));

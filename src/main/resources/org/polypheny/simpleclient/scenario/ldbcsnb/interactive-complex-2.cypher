@@ -2,7 +2,7 @@
 /*
 :params { personId: 10995116278009, maxDate: 1287230400000 }
 */
-MATCH (:Person {id: $personId })-[:KNOWS]-(friend:Person)<-[:HAS_CREATOR]-(message:Message)
+MATCH (:Person {id: $personId })-[:KNOWS]-(friend:Person)<-[:HAS_CREATOR]-(message)
     WHERE message.creationDate < $maxDate
     RETURN
         friend.id AS personId,
@@ -13,5 +13,5 @@ MATCH (:Person {id: $personId })-[:KNOWS]-(friend:Person)<-[:HAS_CREATOR]-(messa
         message.creationDate AS postOrCommentCreationDate
     ORDER BY
         postOrCommentCreationDate DESC,
-        toInteger(postOrCommentId) ASC
+        postOrCommentId ASC
     LIMIT 20

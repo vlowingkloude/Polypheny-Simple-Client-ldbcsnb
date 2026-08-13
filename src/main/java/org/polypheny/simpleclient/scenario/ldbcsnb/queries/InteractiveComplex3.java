@@ -43,9 +43,9 @@ public class InteractiveComplex3 extends LdbcSnbQuery {
 
     // used for warmup
     public Query getDefaultQuery() {
-        return new GraphQuery( cypher.replace("$personId",  "6597069766734").replace("$countryXName", "'Angola'")
-                .replace("$countryYName", "'Colombia'").replace("$startDate", "1275393600000")
-                .replace("$endDate", "1277812800000"));
+        return new GraphQuery( cypher.replace("$personId",  "6597069766734.0").replace("$countryXName", "'Angola'")
+                .replace("$countryYName", "'Colombia'").replace("$startDate", "1275393600000.0")
+                .replace("$endDate", "1277812800000.0"));
     }
 
 }

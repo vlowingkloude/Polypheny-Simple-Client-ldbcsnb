@@ -2,9 +2,9 @@
 /*
 :params { personId: 4398046511268 }
 */
-MATCH (person:Person {id: $personId})<-[:HAS_CREATOR]-(message:Message)<-[like:LIKES]-(liker:Person)
+MATCH (person:Person {id: $personId})<-[:HAS_CREATOR]-(message)<-[like:LIKES]-(liker:Person)
     WITH liker, message, like.creationDate AS likeTime, person
-    ORDER BY likeTime DESC, toInteger(message.id) ASC
+    ORDER BY likeTime DESC, message.id ASC
     WITH liker, head(collect({msg: message, likeTime: likeTime})) AS latestLike, person
 RETURN
     liker.id AS personId,
@@ -17,5 +17,5 @@ RETURN
     not((liker)-[:KNOWS]-(person)) AS isNew
 ORDER BY
     likeCreationDate DESC,
-    toInteger(personId) ASC
+    personId ASC
 LIMIT 20

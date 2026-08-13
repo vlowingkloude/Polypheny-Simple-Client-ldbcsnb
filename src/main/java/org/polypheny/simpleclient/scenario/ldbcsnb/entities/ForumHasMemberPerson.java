@@ -31,21 +31,21 @@ import java.util.Map;
 
 public class ForumHasMemberPerson extends EdgeEntity {
     @Override
-    public String getPath(String pathPrefix, int scaleFactor) {
-        return pathPrefix + String.format("/bi-sf%d-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/dynamic/Forum_hasMember_Person/", scaleFactor);
+    public String getPath(String pathPrefix, String scaleFactor) {
+        return pathPrefix + String.format("/bi-sf%s-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/dynamic/Forum_hasMember_Person/", scaleFactor);
     }
 
     @Override
     public String getQuery(List<String> row) {
-        String baseQuery = "MATCH (forum_%s:Forum {id: %s}), (person_%s:Person {id: %s}) CREATE (forum_%s)-[:HAS_MEMBER {creationDate: DATETIME(\"%s\")}]->(person_%s)";
-        return String.format(baseQuery, row.get(1), row.get(1), row.get(2), row.get(2), row.get(1), row.get(0), row.get(2));
+        String baseQuery = "MATCH (forum_%s:Forum {id: %s.0}), (person_%s:Person {id: %s.0}) CREATE (forum_%s)-[:HAS_MEMBER {creationDate: %s}]->(person_%s)";
+        return String.format(baseQuery, row.get(1), row.get(1), row.get(2), row.get(2), row.get(1), toEpochMillis(row.get(0)), row.get(2));
     }
 
     @Override
     public Map.Entry<String, String> getBatchQuery(List<String> row) {
-        String matchClause = "(forum_%s:Forum {id: %s}), (person_%s:Person {id: %s})";
-        String createClause = "(forum_%s)-[:HAS_MEMBER {creationDate: DATETIME(\"%s\")}]->(person_%s)";
+        String matchClause = "(forum_%s:Forum {id: %s.0}), (person_%s:Person {id: %s.0})";
+        String createClause = "(forum_%s)-[:HAS_MEMBER {creationDate: %s}]->(person_%s)";
         return Map.entry(String.format(matchClause, row.get(1), row.get(1), row.get(2), row.get(2)),
-                String.format(createClause, row.get(1), row.get(0), row.get(2)));
+                String.format(createClause, row.get(1), toEpochMillis(row.get(0)), row.get(2)));
     }
 }

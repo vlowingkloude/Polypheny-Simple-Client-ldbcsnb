@@ -42,6 +42,6 @@ public class InteractiveComplex10 extends LdbcSnbQuery {
     }
     // used for warmup
     public Query getDefaultQuery() {
-        return new GraphQuery( cypher.replace("$personId",  "4398046511333").replace("$month", "5") );
+        return new GraphQuery( cypher.replace("$personId",  "4398046511333.0").replace("$month", "5") );
     }
 }

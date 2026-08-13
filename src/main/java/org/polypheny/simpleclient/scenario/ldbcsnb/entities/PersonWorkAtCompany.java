@@ -31,21 +31,21 @@ import java.util.Map;
 
 public class PersonWorkAtCompany extends EdgeEntity {
     @Override
-    public String getPath(String pathPrefix, int scaleFactor) {
-        return pathPrefix + String.format("/bi-sf%d-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/dynamic/Person_workAt_Company/", scaleFactor);
+    public String getPath(String pathPrefix, String scaleFactor) {
+        return pathPrefix + String.format("/bi-sf%s-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/dynamic/Person_workAt_Company/", scaleFactor);
     }
 
     @Override
     public String getQuery(List<String> row) {
-        String baseQuery = "MATCH (person_%s:Person {id: %s}), (organisation_%s:Company {id: %s}) CREATE (person_%s)-[:STUDY_AT {creationDate: DATETIME(\"%s\"), workFrom: %s}]->(organisation_%s)";
-        return String.format(baseQuery, row.get(1), row.get(1), row.get(2), row.get(2), row.get(1), row.get(0), row.get(3), row.get(2));
+        String baseQuery = "MATCH (person_%s:Person {id: %s.0}), (organisation_%s:Company {id: %s.0}) CREATE (person_%s)-[:WORK_AT {creationDate: %s, workFrom: %s}]->(organisation_%s)";
+        return String.format(baseQuery, row.get(1), row.get(1), row.get(2), row.get(2), row.get(1), toEpochMillis(row.get(0)), row.get(3), row.get(2));
     }
 
     @Override
     public Map.Entry<String, String> getBatchQuery(List<String> row) {
-        String matchClause = "(person_%s:Person {id: %s}), (organisation_%s:Company {id: %s})";
-        String createClause = "(person_%s)-[:STUDY_AT {creationDate: DATETIME(\"%s\"), workFrom: %s}]->(organisation_%s)";
+        String matchClause = "(person_%s:Person {id: %s.0}), (organisation_%s:Company {id: %s.0})";
+        String createClause = "(person_%s)-[:WORK_AT {creationDate: %s, workFrom: %s}]->(organisation_%s)";
         return Map.entry(String.format(matchClause, row.get(1), row.get(1), row.get(2), row.get(2)),
-                String.format(createClause, row.get(1), row.get(0), row.get(3), row.get(2)));
+                String.format(createClause, row.get(1), toEpochMillis(row.get(0)), row.get(3), row.get(2)));
     }
 }

@@ -15,5 +15,5 @@ RETURN
     count(DISTINCT comment) AS replyCount
 ORDER BY
     replyCount DESC,
-    toInteger(personId) ASC
+    personId ASC
 LIMIT 20

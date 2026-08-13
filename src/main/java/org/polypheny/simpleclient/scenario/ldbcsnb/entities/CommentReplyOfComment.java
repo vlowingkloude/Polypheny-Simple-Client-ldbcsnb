@@ -31,21 +31,21 @@ import java.util.Map;
 
 public class CommentReplyOfComment extends EdgeEntity {
     @Override
-    public String getPath(String pathPrefix, int scaleFactor) {
-        return pathPrefix + String.format("/bi-sf%d-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/dynamic/Comment_replyOf_Comment/", scaleFactor);
+    public String getPath(String pathPrefix, String scaleFactor) {
+        return pathPrefix + String.format("/bi-sf%s-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/dynamic/Comment_replyOf_Comment/", scaleFactor);
     }
 
     @Override
     public String getQuery(List<String> row) {
-        String baseQuery = "MATCH (comment_%s:Comment {id: %s}), (comment_%s:Comment {id: %s}) CREATE (comment_%s)-[:REPLY_OF {creationDate: DATETIME(\"%s\")}]->(comment_%s)";
-        return String.format(baseQuery, row.get(1), row.get(1), row.get(2), row.get(2), row.get(1), row.get(0), row.get(2));
+        String baseQuery = "MATCH (comment_%s:Comment {id: %s.0}), (comment_%s:Comment {id: %s.0}) CREATE (comment_%s)-[:REPLY_OF {creationDate: %s}]->(comment_%s)";
+        return String.format(baseQuery, row.get(1), row.get(1), row.get(2), row.get(2), row.get(1), toEpochMillis(row.get(0)), row.get(2));
     }
 
     @Override
     public Map.Entry<String, String> getBatchQuery(List<String> row) {
-        String matchClause = "(comment_%s:Comment {id: %s}), (comment_%s:Comment {id: %s})";
-        String createClause = "(comment_%s)-[:REPLY_OF {creationDate: DATETIME(\"%s\")}]->(comment_%s)";
+        String matchClause = "(comment_%s:Comment {id: %s.0}), (comment_%s:Comment {id: %s.0})";
+        String createClause = "(comment_%s)-[:REPLY_OF {creationDate: %s}]->(comment_%s)";
         return Map.entry(String.format(matchClause, row.get(1), row.get(1), row.get(2), row.get(2)),
-                String.format(createClause, row.get(1), row.get(0), row.get(2)));
+                String.format(createClause, row.get(1), toEpochMillis(row.get(0)), row.get(2)));
     }
 }

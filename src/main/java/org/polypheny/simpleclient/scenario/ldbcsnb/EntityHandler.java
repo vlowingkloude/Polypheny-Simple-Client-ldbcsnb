@@ -26,11 +26,75 @@ package org.polypheny.simpleclient.scenario.ldbcsnb;
 
 import org.polypheny.simpleclient.scenario.ldbcsnb.entities.*;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeParseException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public abstract class EntityHandler {
-    public abstract String getPath(String pathPrefix, int scaleFactor);
+    public abstract String getPath(String pathPrefix, String scaleFactor);
     public abstract String getQuery(List<String> row);
+
+
+    protected static String toEpochMillis( String value ) {
+        long epochMillis;
+        try {
+            epochMillis = Long.parseLong( value );
+            return epochMillis + ".0";
+        } catch ( NumberFormatException ignored ) {
+            // Continue with the string-based formats used by LDBC datasets.
+        }
+
+        try {
+            epochMillis = Instant.parse( value ).toEpochMilli();
+            return epochMillis + ".0";
+        } catch ( DateTimeParseException ignored ) {
+            // Some datasets use an explicit offset rather than the UTC suffix.
+        }
+
+        try {
+            epochMillis = OffsetDateTime.parse( value ).toInstant().toEpochMilli();
+            return epochMillis + ".0";
+        } catch ( DateTimeParseException ignored ) {
+            // Birthdays contain a date without a time component.
+        }
+
+        epochMillis = LocalDate.parse( value ).atStartOfDay().toInstant( ZoneOffset.UTC ).toEpochMilli();
+        return epochMillis + ".0";
+    }
+
+
+    protected static String canonicalLabel( String value ) {
+        if ( value == null || value.isEmpty() ) {
+            throw new IllegalArgumentException( "LDBC label must not be empty" );
+        }
+        return Character.toUpperCase( value.charAt( 0 ) ) + value.substring( 1 );
+    }
+
+
+    protected static String quote( String value ) {
+        return '"' + value
+                .replace( "\\", "\\\\" )
+                .replace( "'", "\\\\'" )
+                .replace( "\"", "\\\"" )
+                .replace( ";", "\\u003B" )
+                .replace( "\n", "\\n" )
+                .replace( "\r", "\\r" ) + '"';
+    }
+
+
+    protected static String stringList( String value ) {
+        if ( value == null || value.isBlank() ) {
+            return "[]";
+        }
+        return Arrays.stream( value.split( ";", -1 ) )
+                .map( EntityHandler::quote )
+                .collect( Collectors.joining( ", ", "[", "]" ) );
+    }
 
     public static EntityHandler[] getEntities() {
         return new EntityHandler[] {

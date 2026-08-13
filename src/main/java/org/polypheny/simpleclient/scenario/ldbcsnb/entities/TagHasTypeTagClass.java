@@ -31,19 +31,19 @@ import java.util.Map;
 
 public class TagHasTypeTagClass extends EdgeEntity {
     @Override
-    public String getPath(String pathPrefix, int scaleFactor) {
-        return pathPrefix + String.format("/bi-sf%d-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/static/Tag_hasType_TagClass/", scaleFactor);
+    public String getPath(String pathPrefix, String scaleFactor) {
+        return pathPrefix + String.format("/bi-sf%s-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/static/Tag_hasType_TagClass/", scaleFactor);
     }
 
     @Override
     public String getQuery(List<String> row) {
-        String baseQuery = "MATCH (tag_%s:Tag {id: %s}), (tagclass_%s:TagClass {id: %s}) CREATE (tag_%s)-[:HAS_TYPE]->(tagclass_%s)";
+        String baseQuery = "MATCH (tag_%s:Tag {id: %s.0}), (tagclass_%s:TagClass {id: %s.0}) CREATE (tag_%s)-[:HAS_TYPE]->(tagclass_%s)";
         return String.format(baseQuery, row.get(0), row.get(0), row.get(1), row.get(1), row.get(0), row.get(1));
     }
 
     @Override
     public Map.Entry<String, String> getBatchQuery(List<String> row) {
-        String matchClause = "(tag_%s:Tag {id: %s}), (tagclass_%s:TagClass {id: %s})";
+        String matchClause = "(tag_%s:Tag {id: %s.0}), (tagclass_%s:TagClass {id: %s.0})";
         String createClause = "(tag_%s)-[:HAS_TYPE]->(tagclass_%s)";
         return Map.entry(String.format(matchClause, row.get(0), row.get(0), row.get(1), row.get(1)),
                 String.format(createClause, row.get(0), row.get(1)));

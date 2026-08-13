@@ -30,19 +30,18 @@ import java.util.List;
 
 public class Forum extends NodeEntity {
     @Override
-    public String getPath(String pathPrefix, int scaleFactor) {
-        return pathPrefix + String.format("/bi-sf%d-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/dynamic/Forum/", scaleFactor);
+    public String getPath(String pathPrefix, String scaleFactor) {
+        return pathPrefix + String.format("/bi-sf%s-composite-projected-fk/graphs/csv/bi/composite-projected-fk/initial_snapshot/dynamic/Forum/", scaleFactor);
     }
 
     @Override
     public String getQuery(List<String> row) {
-        String baseQuery = "CREATE (forum_%s:Forum {creationDate: DATETIME(\"%s\"), id: %s, title: \"%s\"})";
-        return String.format(baseQuery, row.get(1), row.get(0), row.get(1), row.get(2));
+        return "CREATE " + getBatchQuery( row );
     }
 
     @Override
     public String getBatchQuery(List<String> row) {
-        String baseQuery = "(forum_%s:Forum {creationDate: DATETIME(\"%s\"), id: %s, title: \"%s\"})";
-        return String.format(baseQuery, row.get(1), row.get(0), row.get(1), row.get(2));
+        String baseQuery = "(forum_%s:Forum {creationDate: %s, id: %s.0, title: %s})";
+        return String.format( baseQuery, row.get( 1 ), toEpochMillis( row.get( 0 ) ), row.get( 1 ), quote( row.get( 2 ) ) );
     }
 }
